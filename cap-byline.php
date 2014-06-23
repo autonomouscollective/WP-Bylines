@@ -314,9 +314,7 @@ if ( ! function_exists( 'get_cap_byline' ) ) {
 		} elseif ( 'bylineonly' == $type ) {
 			$markup .= ' by '.cap_list_of_authors(null);
 		} else {
-			// if ( !empty( cap_list_of_authors(null) ) ) {
-			// 	$markup .= '<span class="byline"> by '.cap_list_of_authors(null).'. </span>';
-			// }
+			$markup .= '<span class="byline"> by '.cap_list_of_authors(null).'. </span>';
 			$markup .= '<span class="posted-on">Posted on '.$time_string.'</span>';
 		}
 		return $markup;
