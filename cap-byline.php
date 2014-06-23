@@ -251,7 +251,13 @@ function cap_list_of_authors($disablelink) {
 		// get the actual author of this post
 		$primary_author_slug .= get_the_author_meta( 'user_login', $post->post_author );
 		// add the author to the start of the authors list
-		$byline_array[] = $primary_author_slug;
+		foreach ( $people as $person ) {
+			if ( !empty( $person->description ) ) {
+				if ( $primary_author_slug == $person->slug ) {
+					$byline_array[] = $primary_author_slug;
+				}
+			}
+		}
 	}
 
 	// add people who have a description
@@ -314,7 +320,7 @@ if ( ! function_exists( 'get_cap_byline' ) ) {
 		} elseif ( 'bylineonly' == $type ) {
 			$markup .= ' by '.cap_list_of_authors(null);
 		} else {
-			$markup .= '<span class="byline"> by '.cap_list_of_authors(null).'. </span>';
+			$markup .= '<span class="byline"> by '.cap_list_of_authors(null).' </span>';
 			$markup .= '<span class="posted-on">Posted on '.$time_string.'</span>';
 		}
 		return $markup;
