@@ -130,7 +130,7 @@ if( function_exists("register_field_group") ) {
 			'hide_on_screen' => array (
 			),
 		),
-		'menu_order' => 0,
+		'menu_order' => 99,
 	));
 	register_field_group(array (
 		'id' => 'acf_person-settings',
