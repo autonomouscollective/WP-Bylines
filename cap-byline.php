@@ -348,7 +348,7 @@ if ( ! function_exists( 'get_cap_byline' ) ) {
 			$time_format = 'F j, Y';
 		}
 		// Here we check to make sure the post's post time is not the same as the posts updated time within the hour. We also check to make sure that the meta key that manually disables this function isn't true.
-		if ( get_the_modified_time('jnyH') != get_the_time('jnyH') && false == get_post_meta( get_the_ID(), 'tp_disable_updated_time', true ) ) {
+		if ( get_the_modified_time('jnyH') != get_the_time('jnyH') && false == get_post_meta( get_the_ID(), 'cap_disable_updated_time', true ) ) {
 			$time_string = '<time class="published" datetime="%1$s">%2$s</time>';
 			$time_string .= '&nbsp;<time class="updated" datetime="%3$s">Updated: %4$s</time>';
 		} else {
