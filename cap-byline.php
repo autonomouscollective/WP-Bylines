@@ -214,11 +214,10 @@ if( function_exists("register_field_group") ) {
 	));
 }
 
-
 function person_tax_create() {
 	register_taxonomy(
 		'person',
-		array('post'),
+		array('post','page'),
 		array(
 			'label' => __( 'Person' ),
 			'rewrite' => array( 'slug' => 'person', 'with_front' => false ),
@@ -232,21 +231,30 @@ add_action( 'init', 'person_tax_create' );
 function cap_person_autoselect_author( $post_id ){
 	global $post;
 	$author_slug = get_the_author_meta( 'user_login', $post->post_author );
+	$default_byline_override = get_user_meta( $post->post_author, '_default_byline', true );
+	$default_byline = get_term_by( 'id', $default_byline_override, 'person' );
 	// if the author has a person record then set that automatically
 	if ( term_exists( $author_slug, 'person' ) && 0 == get_field( 'disable_auto_author_select','options' ) ) {
 		wp_set_post_terms($post_id, $author_slug, 'person', true);
+	} elseif (!empty($default_byline_override)) {
+		wp_set_post_terms($post_id, $default_byline->slug, 'person', true);
 	}
 }
 add_action('save_post', 'cap_person_autoselect_author');
 
-function cap_list_of_authors($disablelink) {
-	global $post;
-	// lets get all the people associated with this post
-	$people = get_the_terms( $post->ID, 'person' );
+function get_cap_authors($post_id, $disable_link=false, $as_array=false, $return_slugs=true) {
+	if (empty($post_id)) {
+		global $post;
+		// lets get all the people associated with this post
+		$people = get_the_terms( $post->ID, 'person' );
+	} else {
+		$people = get_the_terms( $post_id, 'person' );
+	}
+
 	// lets setup an array to organize these people based on some conditions below
 	$byline_array = array();
-	$primary_author_slug = '';
 
+	$primary_author_slug = '';
 	if ( 0 == get_field( 'disable_auto_author_select','options' ) ) {
 		// get the actual author of this post
 		$primary_author_slug .= get_the_author_meta( 'user_login', $post->post_author );
@@ -277,34 +285,55 @@ function cap_list_of_authors($disablelink) {
 		}
 	}
 
-	$i = 1;
-	$total_num_people = count($byline_array);
-	$output = '';
-	foreach ( $byline_array as $author ) {
-		$data = get_term_by( 'slug', $author, 'person', 'ARRAY_A');
-		//print_r($data);
-		$name = $data['name'];
-		$slug = $data['slug'];
-		if (!empty( $data['description'] ) ) {
-			// Simple check to see if true is passed into the cap_list_of_authors function.
-			// If it is then lets output the list regardless if they have bio or not with no links to profiles.
-			if ( true == $disablelink ) {
-				$output .= $name;
-			} else {
-				$output .= '<a href="'.get_bloginfo('url').'/?person='.$slug.'">'.$name.'</a>';
-			}
+
+	// check for the display function, if as_array is set to true then just return the array...
+	// if not then proceed with the listing function.
+	if ( true == $as_array ) {
+
+		if ( true == $return_slugs ) {
+			return $byline_array;
 		} else {
-			$output .= $name;
+			$return_names_array = array();
+			foreach ( $byline_array as $author ) {
+				$data = get_term_by( 'slug', $author, 'person', 'ARRAY_A');
+				$name = $data['name'];
+				$return_names_array[] = $name;
+			}
+			return $return_names_array;
 		}
 
-		if ( $total_num_people > 1 ) {
-			if ( $i != $total_num_people ) {
-				$output .= ', ';
+	} else {
+
+		$i = 1;
+		$total_num_people = count($byline_array);
+		$output = '';
+		foreach ( $byline_array as $author ) {
+			$data = get_term_by( 'slug', $author, 'person', 'ARRAY_A');
+			//print_r($data);
+			$name = $data['name'];
+			$slug = $data['slug'];
+			if (!empty( $data['description'] ) ) {
+				// Simple check to see if true is passed into the get_cap_authors function.
+				// If it is then lets output the list regardless if they have bio or not with no links to profiles.
+				if ( true == $disable_link ) {
+					$output .= $name;
+				} else {
+					$output .= '<a href="'.get_bloginfo('url').'/?person='.$slug.'">'.$name.'</a>';
+				}
+			} else {
+				$output .= $name;
 			}
+
+			if ( $total_num_people > 1 ) {
+				if ( $i != $total_num_people ) {
+					$output .= ', ';
+				}
+			}
+			$i++;
 		}
-		$i++;
+		return $output;
+
 	}
-	return $output;
 }
 
 // Check for existence of cap_byline function as a theme may override this functionality.
@@ -312,15 +341,34 @@ if ( ! function_exists( 'get_cap_byline' ) ) {
 
 	function get_cap_byline($type) {
 		global $post;
-		$time_string = '<time class="entry-date published" datetime="'.esc_attr( get_the_date( 'c' ) ).'">'.esc_html( get_the_date() ).'</time>';
+		// If is a single post page display the time, otherwise just display only the date.
+		if (is_singular()) {
+			$time_format = 'F j, Y \a\t g:i a';
+		} else {
+			$time_format = 'F j, Y';
+		}
+		// Here we check to make sure the post's post time is not the same as the posts updated time within the hour. We also check to make sure that the meta key that manually disables this function isn't true.
+		if ( get_the_modified_time('jnyH') != get_the_time('jnyH') && false == get_post_meta( get_the_ID(), 'tp_disable_updated_time', true ) ) {
+			$time_string = '<time class="published" datetime="%1$s">%2$s</time>';
+			$time_string .= '&nbsp;<time class="updated" datetime="%3$s">Updated: %4$s</time>';
+		} else {
+			$time_string = '<time class="published" datetime="%1$s">on %2$s</time>';
+		}
+
+		$time_string = sprintf( $time_string,
+			esc_attr( get_the_date($time_format) ), //%1$s
+			esc_html( get_the_date($time_format) ), //%2$s
+			esc_attr( get_the_modified_date($time_format) ), //%3$s
+			esc_html( get_the_modified_date($time_format) ) //%4$s
+		);
 
 		$markup = '';
 		if ( 'dateonly' == $type ) {
 			 $markup .= '<span class="posted-on">'.$time_string.'</span>';
 		} elseif ( 'bylineonly' == $type ) {
-			$markup .= ' by '.cap_list_of_authors(null);
+			$markup .= ' by '.get_cap_authors(null, null, null, null);
 		} else {
-			$markup .= '<span class="byline"> by '.cap_list_of_authors(null).' </span>';
+			$markup .= '<span class="byline"> by '.get_cap_authors(null, null, null, null).' </span>';
 			$markup .= '<span class="posted-on">Posted on '.$time_string.'</span>';
 		}
 		return $markup;
@@ -357,14 +405,18 @@ if ( ! function_exists( 'cap_person_bio' ) ) {
 			$markup .= '<div class="bio-pic">'.wp_get_attachment_image( $person_photo, 'medium' ).'</div>';
 		}
 		// get the bio and add it to $markup
-		$markup .= '<div class="bio">'.$person->description;
+		$markup .= '<div class="bio">';
+		if ( empty($style) ) {
+			$markup .= '<strong>'.$person->name.'</strong> ';
+		}
+		$markup .= $person->description;
 		// if either an email addy or twitter handle are present lets add a hard line break for spacing
 		if ( !empty($person_email) || !empty($person_twitter_handle) ) {
 			$markup .= '<div id="contact-button-seperator"></div>';
 		}
 
 		// if the bio has an email associated add a contact modal form to $markup also check the form ID is present
-		if ( !empty($person_email) && get_field('author_contact_form_id', 'options') ) {
+		if ( !empty($person_email) ) {
 			$markup .= '<a id="contact-modal-link" class="cap-contact-modal-link" href="javascript:void(0);"><img src="'.plugin_dir_url('cap-byline.php').'/cap-byline/mail.png" width="18px"> Contact '.$person->name.'</a>';
 			$markup .= '
 			<script>
@@ -379,7 +431,7 @@ if ( ! function_exists( 'cap_person_bio' ) ) {
 			</script>
 			';
 			$markup .= '<div id="contact-modal" class="modal"><div class="modal-wrapper"><div class="close-modal"><img src="'.plugin_dir_url('cap-byline.php').'/cap-byline/close_circle.png"></div><div class="modal-window">';
-			$markup .= do_shortcode("[gravityform id=".get_field('author_contact_form_id', 'options')." field_values='author_contact_to=".$person_email."']");
+			$markup .= do_shortcode("[gravityform id='".get_field('author_contact_form_id', 'options')."' field_values='author_contact_to=".$person_email."']");
 			add_filter("gform_notification_email", "change_notification_email", 10, 2);
 			$markup .= '</div></div></div>';
 			$markup .= '
