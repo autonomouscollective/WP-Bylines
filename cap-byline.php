@@ -100,6 +100,39 @@ register_activation_hook( __FILE__, 'cap_byline_activate' );
 
 if( function_exists("register_field_group") ) {
 	register_field_group(array (
+		'id' => 'acf_display-settings',
+		'title' => 'Display Settings',
+		'fields' => array (
+			array (
+				'key' => 'field_539b180786b0a',
+				'label' => 'Disable Post Updated Time',
+				'name' => 'cap_disable_updated_time',
+				'type' => 'true_false',
+				'instructions' => 'This will disable the "time updated" function on this post.',
+				'message' => '',
+				'default_value' => 0,
+			)
+		),
+		'location' => array (
+			array (
+				array (
+					'param' => 'post_type',
+					'operator' => '!=',
+					'value' => 'wewantall',
+					'order_no' => 0,
+					'group_no' => 0,
+				),
+			),
+		),
+		'options' => array (
+			'position' => 'side',
+			'layout' => 'default',
+			'hide_on_screen' => array (
+			),
+		),
+		'menu_order' => 0,
+	));
+	register_field_group(array (
 		'id' => 'acf_person-settings',
 		'title' => 'Person Settings',
 		'fields' => array (
