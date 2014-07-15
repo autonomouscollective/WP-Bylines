@@ -225,6 +225,15 @@ if( function_exists("register_field_group") ) {
 				'message' => '',
 				'default_value' => 0,
 			),
+			array (
+				'key' => 'field_53a2ff7d56869',
+				'label' => 'Disable "Updated" Post Time',
+				'name' => 'cap_global_disable_updated_time',
+				'type' => 'true_false',
+				'instructions' => 'Checking this field will disable the post updated time.',
+				'message' => '',
+				'default_value' => 0,
+			),
 		),
 		'location' => array (
 			array (
@@ -381,11 +390,11 @@ if ( ! function_exists( 'get_cap_byline' ) ) {
 			$time_format = 'F j, Y';
 		}
 		// Here we check to make sure the post's post time is not the same as the posts updated time within the hour. We also check to make sure that the meta key that manually disables this function isn't true.
-		if ( get_the_modified_time('jnyH') != get_the_time('jnyH') && false == get_post_meta( get_the_ID(), 'cap_disable_updated_time', true ) ) {
+		if ( get_the_modified_time('jnyH') != get_the_time('jnyH') && false == get_post_meta( get_the_ID(), 'cap_disable_updated_time', true )  && false == get_field('cap_global_disable_updated_time', 'options') ) {
 			$time_string = '<time class="published" datetime="%1$s">%2$s</time>';
 			$time_string .= '&nbsp;<time class="updated" datetime="%3$s">Updated: %4$s</time>';
 		} else {
-			$time_string = '<time class="published" datetime="%1$s">on %2$s</time>';
+			$time_string = '<time class="published" datetime="%1$s">%2$s</time>';
 		}
 
 		$time_string = sprintf( $time_string,
