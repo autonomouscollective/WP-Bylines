@@ -8,130 +8,99 @@
  * License: GPL2
  */
 function cap_byline_activate() {
-	$form = Array (
-		'labelPlacement' => 'top_label',
-		'useCurrentUserAsAuthor' => 1,
-		'title' => 'Contact Author',
-		'description' => 'Fill out the form below to contact this author',
-		'descriptionPlacement' => 'below',
-		'button' => Array ( 'type' => 'text', 'text' => 'Submit' ),
-		'fields' => Array (
-				'0' => Array (
-					'id' => '1',
-					'isRequired' => '1',
-					'size' => 'medium',
-					'type' => 'name',
-					'label' => 'Name',
-					'inputs' =>Array (
-							'0' => Array ( 'id' => '1.3', 'label' => 'First' ),
-							'1' => Array ( 'id' => '1.6', 'label' => 'Last' )
-							),
-					'formId' => '2',
-					'pageNumber' => '1',
-					'descriptionPlacement' => 'below',
-				),
-				'1' => Array (
-						'id' => '2',
+	if ( function_exists('gform_notification') ) {
+		$form = Array (
+			'labelPlacement' => 'top_label',
+			'useCurrentUserAsAuthor' => 1,
+			'title' => 'Contact Author',
+			'description' => 'Fill out the form below to contact this author',
+			'descriptionPlacement' => 'below',
+			'button' => Array ( 'type' => 'text', 'text' => 'Submit' ),
+			'fields' => Array (
+					'0' => Array (
+						'id' => '1',
 						'isRequired' => '1',
 						'size' => 'medium',
-						'type' => 'email',
-						'label' => 'Email',
+						'type' => 'name',
+						'label' => 'Name',
+						'inputs' =>Array (
+								'0' => Array ( 'id' => '1.3', 'label' => 'First' ),
+								'1' => Array ( 'id' => '1.6', 'label' => 'Last' )
+								),
 						'formId' => '2',
 						'pageNumber' => '1',
 						'descriptionPlacement' => 'below',
+					),
+					'1' => Array (
+							'id' => '2',
+							'isRequired' => '1',
+							'size' => 'medium',
+							'type' => 'email',
+							'label' => 'Email',
+							'formId' => '2',
+							'pageNumber' => '1',
+							'descriptionPlacement' => 'below',
+					),
+					'2' => Array (
+						'id' => '3',
+						'isRequired' => '1',
+						'size' => 'medium',
+						'type' => 'textarea',
+						'label' => 'Message',
+						'formId' => '2',
+						'pageNumber' => '1',
+						'descriptionPlacement' => 'below',
+					),
+					'3' => Array (
+						'allowsPrepopulate' => 1,
+						'id' => 4,
+						'size' => 'medium',
+						'type' => 'hidden',
+						'inputName' => 'author_contact_to',
+						'label' => 'To',
+						'formId' => 2,
+						'pageNumber' => 1,
+						'descriptionPlacement' => 'below'
+					)
 				),
-				'2' => Array (
-					'id' => '3',
-					'isRequired' => '1',
-					'size' => 'medium',
-					'type' => 'textarea',
-					'label' => 'Message',
-					'formId' => '2',
-					'pageNumber' => '1',
-					'descriptionPlacement' => 'below',
+			'enableHoneypot' => '1',
+			'enableAnimation' => '1',
+			'id' => '2',
+			'notifications' => Array (
+				'53a057ebea107' => Array (
+					'id' => '53a057ebea107',
+					'to' => '{admin_email}',
+					'name' => 'Admin Notification',
+					'event' => 'form_submission',
+					'toType' => 'email',
+					'subject' => 'You have received a message from '.get_bloginfo('name').'',
+					'message' => '{all_fields}'
 				),
-				'3' => Array (
-					'allowsPrepopulate' => 1,
-					'id' => 4,
-					'size' => 'medium',
-					'type' => 'hidden',
-					'inputName' => 'author_contact_to',
-					'label' => 'To',
-					'formId' => 2,
-					'pageNumber' => 1,
-					'descriptionPlacement' => 'below'
+			),
+			'confirmations' => Array (
+				'53a057ebeadd6' => Array (
+					'id' => '53a057ebeadd6',
+					'isDefault' => '1',
+					'type' => 'message',
+					'name' => 'Default Confirmation',
+					'message' => 'Thank you for contacting me.',
+					'disableAutoformat' => null,
+					'pageId' => null,
+					'url' => null,
+					'queryString' => null,
+					'conditionalLogic' => Array ( ),
 				)
 			),
-		'enableHoneypot' => '1',
-		'enableAnimation' => '1',
-		'id' => '2',
-		'notifications' => Array (
-			'53a057ebea107' => Array (
-				'id' => '53a057ebea107',
-				'to' => '{admin_email}',
-				'name' => 'Admin Notification',
-				'event' => 'form_submission',
-				'toType' => 'email',
-				'subject' => 'You have received a message from '.get_bloginfo('name').'',
-				'message' => '{all_fields}'
-			),
-		),
-		'confirmations' => Array (
-			'53a057ebeadd6' => Array (
-				'id' => '53a057ebeadd6',
-				'isDefault' => '1',
-				'type' => 'message',
-				'name' => 'Default Confirmation',
-				'message' => 'Thank you for contacting me.',
-				'disableAutoformat' => null,
-				'pageId' => null,
-				'url' => null,
-				'queryString' => null,
-				'conditionalLogic' => Array ( ),
-			)
-		),
-		'is_active' => '1',
-		'date_created' => '2014-06-17 15:17:18',
-		'is_trash' => '0',
-	);
-	$form_id = GFAPI::add_form($form);
+			'is_active' => '1',
+			'date_created' => '2014-06-17 15:17:18',
+			'is_trash' => '0',
+		);
+		$form_id = GFAPI::add_form($form);
+	}
 }
 register_activation_hook( __FILE__, 'cap_byline_activate' );
 
 if( function_exists("register_field_group") ) {
-	register_field_group(array (
-		'id' => 'acf_display-settings',
-		'title' => 'Display Settings',
-		'fields' => array (
-			array (
-				'key' => 'field_539b180786b0a',
-				'label' => 'Disable Post Updated Time',
-				'name' => 'cap_disable_updated_time',
-				'type' => 'true_false',
-				'instructions' => 'This will disable the "time updated" function on this post.',
-				'message' => '',
-				'default_value' => 0,
-			)
-		),
-		'location' => array (
-			array (
-				array (
-					'param' => 'post_type',
-					'operator' => '!=',
-					'value' => 'wewantall',
-					'order_no' => 0,
-					'group_no' => 0,
-				),
-			),
-		),
-		'options' => array (
-			'position' => 'side',
-			'layout' => 'default',
-			'hide_on_screen' => array (
-			),
-		),
-		'menu_order' => 99,
-	));
 	register_field_group(array (
 		'id' => 'acf_person-settings',
 		'title' => 'Person Settings',
@@ -179,6 +148,15 @@ if( function_exists("register_field_group") ) {
 				'formatting' => 'none',
 				'maxlength' => '',
 			),
+			array (
+				'key' => 'field_53a2ff7d56f11',
+				'label' => 'Person Is Linked?',
+				'name' => 'person_is_linked',
+				'type' => 'true_false',
+				'instructions' => 'Checking this field will enable the bio link for a person in the byline.',
+				'message' => '',
+				'default_value' => 0,
+			),
 		),
 		'location' => array (
 			array (
@@ -225,15 +203,6 @@ if( function_exists("register_field_group") ) {
 				'message' => '',
 				'default_value' => 0,
 			),
-			array (
-				'key' => 'field_53a2ff7d56869',
-				'label' => 'Disable "Updated" Post Time',
-				'name' => 'cap_global_disable_updated_time',
-				'type' => 'true_false',
-				'instructions' => 'Checking this field will disable the post updated time.',
-				'message' => '',
-				'default_value' => 0,
-			),
 		),
 		'location' => array (
 			array (
@@ -265,6 +234,11 @@ function person_tax_create() {
 			'rewrite' => array( 'slug' => 'person', 'with_front' => false ),
 			'hierarchical' => false,
 			'show_admin_column' => true,
+			'capabilities' => array(
+				'manage_terms' => 'edit_others_posts',
+				'edit_terms' => 'edit_others_posts',
+				'delete_terms' => 'edit_others_posts'
+			)
 		)
 	);
 }
@@ -275,14 +249,20 @@ function cap_person_autoselect_author( $post_id ){
 	$author_slug = get_the_author_meta( 'user_login', $post->post_author );
 	$default_byline_override = get_user_meta( $post->post_author, '_default_byline', true );
 	$default_byline = get_term_by( 'id', $default_byline_override, 'person' );
-	// if the author has a person record then set that automatically
-	if ( term_exists( $author_slug, 'person' ) && 0 == get_field( 'disable_auto_author_select','options' ) ) {
-		wp_set_post_terms($post_id, $author_slug, 'person', true);
-	} elseif (!empty($default_byline_override)) {
-		wp_set_post_terms($post_id, $default_byline->slug, 'person', true);
+	$does_this_post_have_authors = wp_get_post_terms($post->ID, 'person', array("fields" => "ids"));
+
+	// check to see if this post has any authors if it does not proceed with auto selection
+	if (empty($does_this_post_have_authors)) {
+		// if the author has a person record then set that automatically
+		if ( term_exists( $author_slug, 'person' ) && 0 == get_field( 'disable_auto_author_select','options' ) ) {
+			wp_set_post_terms($post_id, $author_slug, 'person', true);
+		} elseif (!empty($default_byline_override)) {
+		// if the user creating this post has a byline override set then set that as the byline automatically
+			wp_set_post_terms($post_id, $default_byline->slug, 'person', true);
+		}
 	}
 }
-add_action('save_post', 'cap_person_autoselect_author');
+add_action( 'save_post', 'cap_person_autoselect_author' );
 
 function get_cap_authors($post_id, $disable_link=false, $as_array=false, $return_slugs=true) {
 	if (empty($post_id)) {
@@ -297,6 +277,7 @@ function get_cap_authors($post_id, $disable_link=false, $as_array=false, $return
 	$byline_array = array();
 
 	$primary_author_slug = '';
+	// check to see if we're disabling auto author selection.
 	if ( 0 == get_field( 'disable_auto_author_select','options' ) ) {
 		// get the actual author of this post
 		$primary_author_slug .= get_the_author_meta( 'user_login', $post->post_author );
@@ -309,10 +290,13 @@ function get_cap_authors($post_id, $disable_link=false, $as_array=false, $return
 			}
 		}
 	}
-
-	// add people who have a description
-	// (this is our condition for recognizing this person as having a bio page)
-	// and then check to make sure it's not the original author. Proceed to add to array.
+	/**
+	 * add people who have a description
+	 * this is our condition for recognizing this person as having a bio page
+	 * and then check to make sure it's not the original author. Proceed to add to array.
+	 * @todo maybe we change the !empty person->description check to false == get_field('person_is_linked', 'person_'.$person->term_id )
+	 * but I feel like this is a better auto sort condition than not. -- Seth
+	 */
 	foreach ( $people as $person ) {
 		if ( !empty( $person->description ) ) {
 			if ( $primary_author_slug != $person->slug ) {
@@ -354,13 +338,18 @@ function get_cap_authors($post_id, $disable_link=false, $as_array=false, $return
 			//print_r($data);
 			$name = $data['name'];
 			$slug = $data['slug'];
+			$id = $data['term_id'];
+			$person_twitter_handle = get_field( 'person_twitter_handle', 'person_'.$id );
 			if (!empty( $data['description'] ) ) {
 				// Simple check to see if true is passed into the get_cap_authors function.
 				// If it is then lets output the list regardless if they have bio or not with no links to profiles.
-				if ( true == $disable_link ) {
+				if ( true == $disable_link || false == get_field('person_is_linked', 'person_'.$id ) ) {
 					$output .= $name;
 				} else {
 					$output .= '<a href="'.get_bloginfo('url').'/?person='.$slug.'">'.$name.'</a>';
+					if ( !empty($person_twitter_handle) && is_singular( get_post_type() ) ) {
+                        $output .= "&nbsp;<a href=\"https://twitter.com/intent/user?screen_name=".$person_twitter_handle."\"><img src=\"" . plugin_dir_url('cap-byline.php') . "/cap-byline/bird_blue_16.png\" class=\"twitter-bird\"></a>";
+                    }
 				}
 			} else {
 				$output .= $name;
@@ -390,7 +379,7 @@ if ( ! function_exists( 'get_cap_byline' ) ) {
 			$time_format = 'F j, Y';
 		}
 		// Here we check to make sure the post's post time is not the same as the posts updated time within the hour. We also check to make sure that the meta key that manually disables this function isn't true.
-		if ( get_the_modified_time('jnyH') != get_the_time('jnyH') && false == get_post_meta( get_the_ID(), 'cap_disable_updated_time', true )  && false == get_field('cap_global_disable_updated_time', 'options') ) {
+		if ( get_the_modified_time('jnyH') != get_the_time('jnyH') && false == get_post_meta( get_the_ID(), 'cap_disable_updated_time', true ) ) {
 			$time_string = '<time class="published" datetime="%1$s">%2$s</time>';
 			$time_string .= '&nbsp;<time class="updated" datetime="%3$s">Updated: %4$s</time>';
 		} else {
@@ -432,6 +421,9 @@ if ( ! function_exists( 'cap_person_bio' ) ) {
 		global $wp_query;
     	$person = $wp_query->get_queried_object();
 		$person_photo = get_field( 'person_photo', 'person_'.$person->term_id );
+		// This field is only being used by ThinkProgress post ACF migration.
+		// The field itself is registered only in the TP theme in fields.php
+		$person_photo_legacy = get_field( 'person_photo_legacy', 'person_'.$person->term_id );
 		$person_title = get_field( 'person_title', 'person_'.$person->term_id );
 		$person_email = get_field( 'person_email', 'person_'.$person->term_id );
 		$person_twitter_handle = get_field( 'person_twitter_handle', 'person_'.$person->term_id );
@@ -445,6 +437,8 @@ if ( ! function_exists( 'cap_person_bio' ) ) {
 		$markup .= '<div class="person-bio">';
 		if (!empty($person_photo)) {
 			$markup .= '<div class="bio-pic">'.wp_get_attachment_image( $person_photo, 'medium' ).'</div>';
+		} elseif (!empty($person_photo_legacy)) {
+			$markup .= '<div class="bio-pic"><img src="'.$person_photo_legacy.'"></div>';
 		}
 		// get the bio and add it to $markup
 		$markup .= '<div class="bio">';
@@ -546,9 +540,9 @@ if ( ! function_exists( 'cap_person_bio' ) ) {
 function route_notification($notification, $form , $entry) {
     global $post;
 	if ($form["id"] == get_field('author_contact_form_id', 'options') ) {
-		$email_to = gform_get_meta($entry["id"], 'author_contact_to');
-		if ($email_to){
-			$notification['to'] = $email_to;
+		$email_to = $entry[4];
+		if ( !empty($email_to) ){
+			$notification['to'] = ''.$email_to.'';
 		}
 	}
     return $notification ;
