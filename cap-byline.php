@@ -428,6 +428,10 @@ if ( ! function_exists( 'cap_person_bio' ) ) {
 		$person_email = get_field( 'person_email', 'person_'.$person->term_id );
 		$person_twitter_handle = get_field( 'person_twitter_handle', 'person_'.$person->term_id );
 
+		if (!empty($person_photo)) {
+			$person_photo_output = wp_get_attachment_image( $person_photo, 'medium' );
+		}
+
 		$markup = '<div class="person '.$style.'">';
 		// if the "full" style is being displayed then add the person name and title atop the bio
 		if ( 'full' == $style ) {
@@ -467,8 +471,7 @@ if ( ! function_exists( 'cap_person_bio' ) ) {
 			</script>
 			';
 			$markup .= '<div id="contact-modal" class="modal"><div class="modal-wrapper"><div class="close-modal"><img src="'.plugin_dir_url('cap-byline.php').'/cap-byline/close_circle.png"></div><div class="modal-window">';
-			$markup .= do_shortcode("[gravityform id='".get_field('author_contact_form_id', 'options')."' field_values='author_contact_to=".$person_email."']");
-			add_filter("gform_notification_email", "change_notification_email", 10, 2);
+			$markup .= gravity_form(get_field('author_contact_form_id', 'options'), false, false, false, array('author_contact_to' => ''.$person_email.''), true, 25, false);
 			$markup .= '</div></div></div>';
 			$markup .= '
 			<style>
