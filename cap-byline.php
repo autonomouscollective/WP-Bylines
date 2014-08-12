@@ -2,7 +2,7 @@
 /**
  * Plugin Name: CAP Bylines
  * Description: Provides a CAP standardized method for choosing authors for posts
- * Version: 1.0
+ * Version: 1.2
  * Author: Seth Rubenstein for Center for American Progress
  * Author URI: http://sethrubenstein.info
  * License: GPL2
@@ -348,7 +348,7 @@ function get_cap_authors($post_id, $disable_link=false, $as_array=false, $return
 				} else {
 					$output .= '<a href="'.get_bloginfo('url').'/?person='.$slug.'">'.$name.'</a>';
 					if ( !empty($person_twitter_handle) && is_singular( get_post_type() ) ) {
-                        $output .= "&nbsp;<a href=\"https://twitter.com/intent/user?screen_name=".$person_twitter_handle."\"><img src=\"" . plugin_dir_url('cap-byline.php') . "/cap-byline/bird_blue_16.png\" class=\"twitter-bird\"></a>";
+                        $output .= "<a href=\"https://twitter.com/intent/user?screen_name=".$person_twitter_handle."\"><img src=\"" . plugin_dir_url('cap-byline.php') . "/cap-byline/bird_blue_16.png\" class=\"twitter-bird\"></a>";
                     }
 				}
 			} else {
@@ -472,6 +472,7 @@ if ( ! function_exists( 'cap_person_bio' ) ) {
 			';
 			$markup .= '<div id="contact-modal" class="modal"><div class="modal-wrapper"><div class="close-modal"><img src="'.plugin_dir_url('cap-byline.php').'/cap-byline/close_circle.png"></div><div class="modal-window">';
 			$markup .= gravity_form(get_field('author_contact_form_id', 'options'), false, false, false, array('author_contact_to' => ''.$person_email.''), true, 25, false);
+			gravity_form_enqueue_scripts(get_field('author_contact_form_id', 'options'), true);
 			$markup .= '</div></div></div>';
 			$markup .= '
 			<style>
