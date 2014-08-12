@@ -541,14 +541,14 @@ if ( ! function_exists( 'cap_person_bio' ) ) {
 	}
 }
 
-function route_notification($notification, $form , $entry) {
+function cap_person_route_notification($notification, $form , $entry) {
     global $post;
 	if ($form["id"] == get_field('author_contact_form_id', 'options') ) {
 		$email_to = $entry[4];
 		if ( !empty($email_to) ){
-			$notification['to'] = ''.$email_to.'';
+			$notification['to'] = "".$email_to."";
 		}
 	}
     return $notification ;
 }
-add_filter( 'gform_notification', 'route_notification', 10, 3 );
+add_filter( 'gform_notification', 'cap_person_route_notification', 10, 3 );
