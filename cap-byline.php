@@ -203,6 +203,15 @@ if( function_exists("register_field_group") ) {
 				'message' => '',
 				'default_value' => 0,
 			),
+			array (
+				'key' => 'field_53a2fe7d56009',
+				'label' => 'Disable Updated Time',
+				'name' => 'global_disable_update_time',
+				'type' => 'true_false',
+				'instructions' => 'Checking this field will disable the updated time globally.',
+				'message' => '',
+				'default_value' => 0,
+			),
 		),
 		'location' => array (
 			array (
@@ -348,7 +357,7 @@ function get_cap_authors($post_id, $disable_link=false, $as_array=false, $return
 				} else {
 					$output .= '<a href="'.get_bloginfo('url').'/?person='.$slug.'">'.$name.'</a>';
 					if ( !empty($person_twitter_handle) && is_singular( get_post_type() ) ) {
-                        $output .= "<a href=\"https://twitter.com/intent/user?screen_name=".$person_twitter_handle."\"><img src=\"" . plugin_dir_url('cap-byline.php') . "/cap-byline/bird_blue_16.png\" class=\"twitter-bird\"></a>";
+                        $output .= "<a href=\"https://twitter.com/intent/user?screen_name=".$person_twitter_handle."\"><img src=\"" . plugin_dir_url('cap-byline.php') . "cap-byline/bird_blue_16.png\" class=\"twitter-bird\"></a>";
                     }
 				}
 			} else {
@@ -379,7 +388,7 @@ if ( ! function_exists( 'get_cap_byline' ) ) {
 			$time_format = 'F j, Y';
 		}
 		// Here we check to make sure the post's post time is not the same as the posts updated time within the hour. We also check to make sure that the meta key that manually disables this function isn't true.
-		if ( get_the_modified_time('jnyH') != get_the_time('jnyH') && false == get_post_meta( get_the_ID(), 'cap_disable_updated_time', true ) ) {
+		if ( get_the_modified_time('jnyH') != get_the_time('jnyH') && false == get_post_meta( get_the_ID(), 'cap_disable_updated_time', true ) && false == get_field( 'global_disable_update_time', 'options' ) ) {
 			$time_string = '<time class="published" datetime="%1$s">%2$s</time>';
 			$time_string .= '&nbsp;<time class="updated" datetime="%3$s">Updated: %4$s</time>';
 		} else {
