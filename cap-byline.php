@@ -357,7 +357,7 @@ function get_cap_authors($post_id, $disable_link=false, $as_array=false, $return
 				} else {
 					$output .= '<a href="'.get_bloginfo('url').'/?person='.$slug.'">'.$name.'</a>';
 					if ( !empty($person_twitter_handle) && is_singular( get_post_type() ) ) {
-                        $output .= "<a href=\"https://twitter.com/intent/user?screen_name=".$person_twitter_handle."\"><img src=\"" . plugin_dir_url('cap-byline.php') . "cap-byline/bird_blue_16.png\" class=\"twitter-bird\"></a>";
+                        $output .= "<a href=\"https://twitter.com/intent/user?screen_name=".$person_twitter_handle."\"><img src=\"" .content_url(). "/plugins/cap-byline/bird_blue_16.png\" class=\"twitter-bird\"></a>";
                     }
 				}
 			} else {
