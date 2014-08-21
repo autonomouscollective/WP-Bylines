@@ -344,6 +344,10 @@ function cap_byline_array_set_terms( $post_id ) {
 // run before ACF saves the $_POST['fields'] data
 add_action('acf/save_post', 'cap_byline_array_set_terms', 20);
 
+
+/**
+ * Returns the posts list of authors based on various criteria.
+ */
 function get_cap_authors($post_id, $disable_link=false, $as_array=false, $return_slugs=true) {
 	if (empty($post_id)) {
 		global $post;
@@ -353,12 +357,16 @@ function get_cap_authors($post_id, $disable_link=false, $as_array=false, $return
 		$people = get_field('byline_array', $post_id);
 	}
 
-	// lets setup an array to organize these people based on some conditions below
-	$byline_array = array();
-	// add people who do not have a description ("guest authors, contributors")
-	foreach ( $people as $person ) {
-		$get_byline = get_term_by( 'id', $person, 'person' );
-		$byline_array[] = $get_byline->slug;
+	if ( !empty($people) ) {
+		// lets setup an array to organize these people based on some conditions below
+		$byline_array = array();
+		// add people who do not have a description ("guest authors, contributors")
+		foreach ( $people as $person ) {
+			$get_byline = get_term_by( 'id', $person, 'person' );
+			$byline_array[] = $get_byline->slug;
+		}
+	} else {
+		$byline_array = '';
 	}
 
 	// Check for the display function, if as_array is set to true then just return the array...
@@ -382,34 +390,38 @@ function get_cap_authors($post_id, $disable_link=false, $as_array=false, $return
 		$i = 1;
 		$total_num_people = count($byline_array);
 		$output = '';
-		foreach ( $byline_array as $author ) {
-			$data = get_term_by( 'slug', $author, 'person', 'ARRAY_A');
-			//print_r($data);
-			$name = $data['name'];
-			$slug = $data['slug'];
-			$id = $data['term_id'];
-			$person_twitter_handle = get_field( 'person_twitter_handle', 'person_'.$id );
-			if (!empty( $data['description'] ) ) {
-				// Simple check to see if true is passed into the get_cap_authors function.
-				// If it is then lets output the list regardless if they have bio or not with no links to profiles.
-				if ( true == $disable_link || false == get_field('person_is_linked', 'person_'.$id ) ) {
-					$output .= $name;
+		if (!empty($byline_array)) {
+			foreach ( $byline_array as $author ) {
+				$data = get_term_by( 'slug', $author, 'person', 'ARRAY_A');
+				//print_r($data);
+				$name = $data['name'];
+				$slug = $data['slug'];
+				$id = $data['term_id'];
+				$person_twitter_handle = get_field( 'person_twitter_handle', 'person_'.$id );
+				if (!empty( $data['description'] ) ) {
+					// Simple check to see if true is passed into the get_cap_authors function.
+					// If it is then lets output the list regardless if they have bio or not with no links to profiles.
+					if ( true == $disable_link || false == get_field('person_is_linked', 'person_'.$id ) ) {
+						$output .= $name;
+					} else {
+						$output .= '<a href="'.get_bloginfo('url').'/?person='.$slug.'">'.$name.'</a>';
+						if ( !empty($person_twitter_handle) && is_singular( get_post_type() ) ) {
+							$output .= "<a href=\"https://twitter.com/intent/user?screen_name=".$person_twitter_handle."\"><img src=\"" .content_url(). "/plugins/cap-byline/bird_blue_16.png\" class=\"twitter-bird\"></a>";
+						}
+					}
 				} else {
-					$output .= '<a href="'.get_bloginfo('url').'/?person='.$slug.'">'.$name.'</a>';
-					if ( !empty($person_twitter_handle) && is_singular( get_post_type() ) ) {
-                        $output .= "<a href=\"https://twitter.com/intent/user?screen_name=".$person_twitter_handle."\"><img src=\"" .content_url(). "/plugins/cap-byline/bird_blue_16.png\" class=\"twitter-bird\"></a>";
-                    }
+					$output .= $name;
 				}
-			} else {
-				$output .= $name;
-			}
 
-			if ( $total_num_people > 1 ) {
-				if ( $i != $total_num_people ) {
-					$output .= ', ';
+				if ( $total_num_people > 1 ) {
+					if ( $i != $total_num_people ) {
+						$output .= ', ';
+					}
 				}
+				$i++;
 			}
-			$i++;
+		} else {
+			$output = "<!--Found No Data, Check CAP Byline Plugin-->";
 		}
 		return $output;
 	}
@@ -417,7 +429,9 @@ function get_cap_authors($post_id, $disable_link=false, $as_array=false, $return
 
 // Check for existence of cap_byline function as a theme may override this functionality.
 if ( ! function_exists( 'get_cap_byline' ) ) {
-
+/**
+ * Display the list of authors along with the post time.
+ */
 	function get_cap_byline($type) {
 		global $post;
 		// If is a single post page display the time, otherwise just display only the date.
