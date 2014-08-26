@@ -649,7 +649,7 @@ function cap_byline_migrate() {
 	// Setup a query to get posts that don't have a byline array meta field. Limit to 10.
 	$args = array(
 		'post_type' => 'post',
-		'posts_per_page' => 10,
+		'posts_per_page' => 5000,
 		'fields' => 'ids',
 		'meta_query' => array(
 			array(
@@ -692,12 +692,38 @@ function cap_byline_migrate() {
 	$results["count"] = get_missing_byline_array_count();
     // write json header
     // header("Content-type: application/json");
-
+	//
     // $return = json_encode($results);
-    echo $results["count"];
+    // echo $return;
+	echo $results["count"];
 
 	die();
 }
 add_action('wp_ajax_cap_byline_migrate', 'cap_byline_migrate');
 add_action('wp_ajax_nopriv_cap_byline_migrate', 'cap_byline_migrate');
 // To run hit - http://domain.com/wp-admin/admin-ajax.php?action=cap_byline_migrate
+
+function give_me_a_button_to_click() {
+	?>
+	<a id="#my-button" href="#"><h1>Run migration</h1></a>
+	<script>
+	jQuery('#my-button').click(function(event){
+		console.log("Migration clicked");
+	    event.preventDefault();
+		jQuery.ajax({
+			url: "/wp-admin/admin-ajax.php?action=cap_byline_migrate",
+			type: "post",
+			success: function(response){
+				progress(response.count);
+				console.log("Migraiton running");
+			},
+			error: function() {
+				console.log('Uhoh problem running migration');
+			}
+		});
+		console.log("migration complete");
+    });
+	</script>
+	<?php
+}
+add_action('admin_footer','give_me_a_button_to_click');
