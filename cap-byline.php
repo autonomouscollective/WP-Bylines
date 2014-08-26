@@ -27,11 +27,14 @@ function person_tax_create() {
 }
 add_action( 'init', 'person_tax_create' );
 
+/**
+ * Remove the Person metabox from posts.
+ * @todo remember to uncomment/activate the action when done testing.
+ */
 function remove_person_meta_box() {
 	remove_meta_box( 'tagsdiv-person', 'post', 'side' );
 }
-
-add_action( 'admin_menu' , 'remove_person_meta_box' );
+// add_action( 'admin_menu' , 'remove_person_meta_box' );
 
 function cap_byline_activate() {
 	if ( function_exists('gform_notification') ) {
@@ -618,35 +621,80 @@ add_filter( 'gform_notification', 'cap_person_route_notification', 10, 3 );
 /**
  * Quick, dirty, but it works migration script. This will get all post types, loop through them and then update the acf cap byline field with the original terms data.
  */
+
+// Let's get the missing posts with missing byline arrays and provide a number as to how many there are.
+function get_missing_byline_array_count() {
+
+    global $wpdb;
+
+    $query = "
+        SELECT count(*)
+        FROM wp_posts
+        WHERE post_status = 'publish' AND ID NOT IN (
+            SELECT post_id
+            FROM wp_postmeta
+            WHERE meta_key = 'byline_array' AND meta_value != '' AND meta_value IS NOT NULL
+        );
+    ";
+
+    $count = $wpdb->get_var($query);
+
+    return $count;
+}
+
 function cap_byline_migrate() {
-	// The Query
+	// Setup an empty dumb array. We'll use this later on to store how many posts dont have data.
+	$results = array();
+
+	// Setup a query to get posts that don't have a byline array meta field. Limit to 10.
 	$args = array(
-		'post_type' => get_post_types(),
-		'posts_per_page' => -1
+		'post_type' => 'post',
+		'posts_per_page' => 10,
+		'fields' => 'ids',
+		'meta_query' => array(
+			array(
+				'key' => 'byline_array',
+				'compare' => 'NOT EXISTS',
+			)
+		),
+		'cache_results' => false
 	);
 	$the_query = new WP_Query( $args );
 
-	// The Loop
+	// Loop through this query, get the person terms that already exist, copy those via
+	// update_field (an ACF function) to the new byline_array field.
 	if ( $the_query->have_posts() ) {
-		$i = 0;
+		$i = 1;
 		while ( $the_query->have_posts() ) {
 			$the_query->the_post();
 			$persons = get_the_terms( get_the_ID(), 'person' );
 			$new_data = array();
-			foreach ($persons as $person ) {
-				$new_data[] = $person->term_id;
+			// We don't want to throw errors if there are any posts with no data.
+			if (!empty($persons)) {
+				foreach ($persons as $person ) {
+					$new_data[] = $person->term_id;
+				}
+				update_field('field_53f38cd042a42', $new_data);
+				print_r($new_data);
+				echo '<strong>'.get_the_id().'</strong>';
+				echo '<br>'.get_the_title().'  -- Ran '. $i . '<br><br>';
+			} else {
+				echo '<span style="color:red">'.get_the_title().' Had No Persons -- Ran' . $i . '</span><br><br>';
 			}
-			update_field('field_53f38cd042a42', $new_data);
-			print_r($new_data);
-			echo '<br>'.get_the_title().' Ran '. $i . '<br><br>';
 			$i++;
 		}
 
-	} else {
-		// no posts found
 	}
-	/* Restore original Post Data */
+	// Restore original post data to start through the loop again.
 	wp_reset_postdata();
+
+	// Provide a count of how many posts after running this query do not have the byline_array field.
+	$results["count"] = get_missing_byline_array_count();
+    // write json header
+    // header("Content-type: application/json");
+
+    // $return = json_encode($results);
+    echo $results["count"];
 
 	die();
 }
