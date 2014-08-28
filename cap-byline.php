@@ -29,12 +29,11 @@ add_action( 'init', 'person_tax_create' );
 
 /**
  * Remove the Person metabox from posts.
- * @todo remember to uncomment/activate the action when done testing.
  */
 function remove_person_meta_box() {
 	remove_meta_box( 'tagsdiv-person', 'post', 'side' );
 }
-// add_action( 'admin_menu' , 'remove_person_meta_box' );
+//add_action( 'admin_menu' , 'remove_person_meta_box' );
 
 function cap_byline_activate() {
 	if ( function_exists('gform_notification') ) {
@@ -274,7 +273,7 @@ if( function_exists("register_field_group") ) {
 				'name' => 'byline_array',
 				'prefix' => '',
 				'type' => 'taxonomy',
-				'instructions' => 'This field will autocomplete names. Start typing to add authors to this post.',
+				'instructions' => 'This field will autocomplete names. Start typing to add existing person(s) to this post.',
 				'required' => 0,
 				'conditional_logic' => 0,
 				'taxonomy' => 'person',
@@ -307,12 +306,14 @@ if( function_exists('acf_add_options_page') ) {
 	acf_add_options_page();
 }
 
+/**
+ * Sets the person terms to the post via the ACF Byline Array field.
+ */
 function cap_byline_array_set_terms( $post_id ) {
 	global $post;
 	// Get the ACF Byline Array
 	$field_data = get_field('byline_array');
 	$persons = array();
-
 	// Check to see if this post has any authors if it does not proceed with auto selection
 	// we do this check becuase we don't want to continue to autoselect if they've removed the autoselect author.
 	// Also we're presuming to autoselect as a function only if no authors are present.
@@ -324,15 +325,16 @@ function cap_byline_array_set_terms( $post_id ) {
 		// Check for an author byline override. Basically this is a intern function.
 		$default_byline_override = get_user_meta( $post->post_author, '_default_byline', true );
 		$default_byline = get_term_by( 'id', $default_byline_override, 'person' );
-		$default_byline_id = $default_byline->slug;
+		$default_byline_id = $default_byline->term_id;
 
-		// If a person exists with the slug of the author then auto add it.
-		if ( term_exists( $author_slug, 'person' ) && 0 == get_field( 'disable_auto_author_select','options' ) ) {
-			$persons[] = $author_id;
-		} elseif ( !empty($default_byline_override) ) {
-			// If the user creating this post has a byline override set then set that as the byline automatically
+		// If a override is present use that first
+		if ( !empty($default_byline_override) && false === get_field( 'disable_auto_author_select','options' ) ) {
 			$persons[] = $default_byline_id;
+		// If a person exists with the slug of the author then auto add it.
+		} elseif ( term_exists( $author_slug, 'person' ) && false === get_field( 'disable_auto_author_select','options' ) ) {
+			$persons[] = $author_id;
 		}
+
 	}
 
 	// Go through the persons from the field add themm to the persons array.
@@ -649,7 +651,7 @@ function cap_byline_migrate() {
 	// Setup a query to get posts that don't have a byline array meta field. Limit to 10.
 	$args = array(
 		'post_type' => 'post',
-		'posts_per_page' => 5000,
+		'posts_per_page' => 500,
 		'fields' => 'ids',
 		'meta_query' => array(
 			array(
@@ -690,9 +692,9 @@ function cap_byline_migrate() {
 
 	// Provide a count of how many posts after running this query do not have the byline_array field.
 	$results["count"] = get_missing_byline_array_count();
-    // write json header
+    // Write json header
     // header("Content-type: application/json");
-	//
+
     // $return = json_encode($results);
     // echo $return;
 	echo $results["count"];
@@ -705,24 +707,26 @@ add_action('wp_ajax_nopriv_cap_byline_migrate', 'cap_byline_migrate');
 
 function give_me_a_button_to_click() {
 	?>
-	<a id="#my-button" href="#"><h1>Run migration</h1></a>
+	<span id="#my-button"><h1>Run migration</h1></span>
 	<script>
-	jQuery('#my-button').click(function(event){
-		console.log("Migration clicked");
-	    event.preventDefault();
-		jQuery.ajax({
-			url: "/wp-admin/admin-ajax.php?action=cap_byline_migrate",
-			type: "post",
-			success: function(response){
-				progress(response.count);
-				console.log("Migraiton running");
-			},
-			error: function() {
-				console.log('Uhoh problem running migration');
-			}
+	jQuery(document).ready(function(){
+		jQuery('#my-button').click(function(event){
+			console.log("Migration clicked");
+			event.preventDefault();
+			jQuery.ajax({
+				url: "/wp-admin/admin-ajax.php?action=cap_byline_migrate",
+				type: "post",
+				success: function(response){
+					progress(response.count);
+					console.log("Migraiton running");
+				},
+				error: function() {
+					console.log('Uhoh problem running migration');
+				}
+			});
+			console.log("Migration complete");
 		});
-		console.log("migration complete");
-    });
+	});
 	</script>
 	<?php
 }
