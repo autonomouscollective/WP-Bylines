@@ -34,7 +34,7 @@ add_action( 'init', 'person_tax_create' );
 function remove_person_meta_box() {
 	remove_meta_box( 'tagsdiv-person', 'post', 'side' );
 }
-//add_action( 'admin_menu' , 'remove_person_meta_box' );
+add_action( 'admin_menu' , 'remove_person_meta_box' );
 
 function cap_byline_activate() {
 	if ( function_exists('gform_notification') ) {
@@ -290,7 +290,7 @@ if( function_exists("register_field_group") ) {
 				array (
 					'param' => 'post_type',
 					'operator' => '!=',
-					'value' => 'nulltastic',
+					'value' => 'state-year-report',
 				),
 			),
 		),
@@ -312,40 +312,43 @@ if( function_exists('acf_add_options_page') ) {
  */
 function cap_byline_array_set_terms( $post_id ) {
 	global $post;
-	// Get the ACF Byline Array
-	$field_data = get_field('byline_array');
-	$persons = array();
-	// Check to see if this post has any authors if it does not proceed with auto selection
-	// we do this check becuase we don't want to continue to autoselect if they've removed the autoselect author.
-	// Also we're presuming to autoselect as a function only if no authors are present.
-	if ( empty($field_data) ) {
-		// Get the author information
-		$author_slug = get_the_author_meta( 'user_login', $post->post_author );
-		$author_data = get_term_by( 'slug', $author_slug, 'person' );
-		$author_id = $author_data->term_id;
-		// Check for an author byline override. Basically this is a intern function.
-		$default_byline_override = get_user_meta( $post->post_author, '_default_byline', true );
-		$default_byline = get_term_by( 'id', $default_byline_override, 'person' );
-		$default_byline_id = $default_byline->term_id;
+	// Dont run this on the state-year-report post type
+	if ( !is_singular('state-year-report') ) {
+		// Get the ACF Byline Array
+		$field_data = get_field('byline_array');
+		$persons = array();
+		// Check to see if this post has any authors if it does not proceed with auto selection
+		// we do this check becuase we don't want to continue to autoselect if they've removed the autoselect author.
+		// Also we're presuming to autoselect as a function only if no authors are present.
+		if ( empty($field_data) ) {
+			// Get the author information
+			$author_slug = get_the_author_meta( 'user_login', $post->post_author );
+			$author_data = get_term_by( 'slug', $author_slug, 'person' );
+			$author_id = $author_data->term_id;
+			// Check for an author byline override. Basically this is a intern function.
+			$default_byline_override = get_user_meta( $post->post_author, '_default_byline', true );
+			$default_byline = get_term_by( 'id', $default_byline_override, 'person' );
+			$default_byline_id = $default_byline->term_id;
 
-		// If a override is present use that first
-		if ( !empty($default_byline_override) && false === get_field( 'disable_auto_author_select','options' ) ) {
-			$persons[] = $default_byline_id;
-		// If a person exists with the slug of the author then auto add it.
-		} elseif ( term_exists( $author_slug, 'person' ) && false === get_field( 'disable_auto_author_select','options' ) ) {
-			$persons[] = $author_id;
+			// If a override is present use that first
+			if ( !empty($default_byline_override) && false === get_field( 'disable_auto_author_select','options' ) ) {
+				$persons[] = $default_byline_id;
+			// If a person exists with the slug of the author then auto add it.
+			} elseif ( term_exists( $author_slug, 'person' ) && false === get_field( 'disable_auto_author_select','options' ) ) {
+				$persons[] = $author_id;
+			}
+
 		}
 
+		// Go through the persons from the field add themm to the persons array.
+		foreach ($field_data as $data) {
+			$persons[] = $data;
+		}
+		// Go back and update the field with the new data
+		update_field('field_53f38cd042a42', $persons);
+		// Set this posts person terms to the persons array
+		wp_set_post_terms( $post_id, $persons, 'person', false );
 	}
-
-	// Go through the persons from the field add themm to the persons array.
-	foreach ($field_data as $data) {
-		$persons[] = $data;
-	}
-	// Go back and update the field with the new data
-	update_field('field_53f38cd042a42', $persons);
-	// Set this posts person terms to the persons array
-	wp_set_post_terms( $post_id, $persons, 'person', false );
 }
 // run before ACF saves the $_POST['fields'] data
 add_action('acf/save_post', 'cap_byline_array_set_terms', 20);
@@ -399,7 +402,6 @@ function get_cap_authors($post_id, $disable_link=false, $as_array=false, $return
 		if (!empty($byline_array)) {
 			foreach ( $byline_array as $author ) {
 				$data = get_term_by( 'slug', $author, 'person', 'ARRAY_A');
-				//print_r($data);
 				$name = $data['name'];
 				$slug = $data['slug'];
 				$id = $data['term_id'];
