@@ -419,7 +419,11 @@ function get_cap_authors($post_id, $disable_link=false, $as_array=false, $return
 					$output .= $name;
 				}
 
-				if ( $total_num_people > 1 ) {
+				if ( $total_num_people > 1 && $total_num_people <= 2 ) {
+					if ( $i != $total_num_people ) {
+						$output .= ' & ';
+					}
+				} elseif ( $total_num_people > 2 ) {
 					if ( $i != $total_num_people ) {
 						$output .= ', ';
 					}

@@ -1,9 +1,4 @@
 <?php
-function cap_byline_migrate_add_to_menu() {
-    // Add a new top-level menu
-    add_menu_page(__('Byline Migration Tool'), __('Byline Migration Tool'), 'manage_options', 'byline_migraiton_tool', 'byline_migration_display' );
-}
-add_action('admin_menu', 'cap_byline_migrate_add_to_menu' );
 /**
  * Quick, dirty, but it works migration script. This will get all post types, loop through them and then update the acf cap byline field with the original terms data.
  */
@@ -35,7 +30,7 @@ function cap_byline_migrate() {
     // Setup a query to get posts that don't have a byline array meta field. Limit to 10.
     $args = array(
         'post_type' => 'post',
-        'posts_per_page' => 10,
+        'posts_per_page' => 100,
         'fields' => 'ids',
         'meta_query' => array(
             array(
@@ -81,112 +76,10 @@ function cap_byline_migrate() {
 
     $return = json_encode($results);
     echo $return;
-    // echo $results["count"];
+    //echo $results["count"];
 
     die();
 }
 add_action('wp_ajax_cap_byline_migrate', 'cap_byline_migrate');
 add_action('wp_ajax_nopriv_cap_byline_migrate', 'cap_byline_migrate');
 // To run hit - http://domain.com/wp-admin/admin-ajax.php?action=cap_byline_migrate
-
-function byline_migration_display() {
-    // # of missing short urls when the page loads
-    $max = get_missing_byline_array_count();
-?>
-<style type="text/css">
-.progress-label {
-float: left;
-margin-left: 33%;
-margin-top: 5px;
-font-weight: bold;
-text-shadow: 1px 1px 0 #fff;
-}
-#progressbar {
-width: 30%;
-float: left;
-margin-right: 1em;
-}
-</style>
-
-<script>
-jQuery(document).ready(function($) {
-// initialize progress bar and label for updating missing shorturls
- var progressbar = jQuery( "#progressbar" ),
- progressLabel = jQuery( ".progress-label" );
- progressbar.progressbar({
-     value: 0,
-     max: <?php echo $max; ?>,
-     change: function() {
-         // update the progress bar and label
-         var val = progressbar.progressbar("option", "max") - progressbar.progressbar( "option", "value");
-         progressLabel.text( "" + val + " Missing Byline Arrays" );
-
-         if (val > 0) {
-             // process the next batch
-             jQuery("#backfill").click();
-         } else {
-             // disable the button
-             jQuery("#backfill").removeClass("button-primary").addClass("button-primary-inactive").attr("disabled","disabled");
-         }
-    },
-    complete: function() {
-        // update the progress label
-        progressLabel.text( "Complete!" );
-    }
- });
-
- /**
-  * Update the progress bar
-  */
- function progress(value) {
-     var val = progressbar.progressbar("option", "max") - value;
-    progressbar.progressbar( "option", "value", val );
- }
-
- /**
-  * If there are any missing short urls, then enable the update button and set its click handler
-  */
- if (<?php echo $max; ?>) {
-    jQuery("#backfill").each(function(){
-        jQuery(this).removeClass("button-primary-inactive").addClass("button-primary").removeAttr("disabled");
-
-        jQuery(this).click(function(event){
-            event.preventDefault();
-            console.log('Running migrate');
-            jQuery.ajax({
-                url: "/wp-admin/admin-ajax.php?action=cap_byline_migrate",
-                type: "post",
-                success: function(response){
-                    console.log('Migration moving along');
-                    if (response.error) {
-                    console.log('Migration error');    jQuery("#backfillerror").addClass("error").html(response.error);
-                    } else {
-                        console.log('Migration batch complete');
-                        progress(response.count);
-                    }
-                },
-                error: function() {
-                console.log('Migration did not get started');    jQuery("#backfillerror").addClass("error").html("error");
-                }
-            });
-        });
-    });
- }
-});
-</script>
-
-<div class="wrap">
-<h2>Cap Byline Migration Assistant</h2>
-
-<div id="result"></div>
-</div>
-
-<br/>
-
-<div class="wrap">
-<div id="progressbar"><div class="progress-label"><?php echo get_missing_byline_array_count(); ?> Missing Byline Arrays</div></div><form><input type="button" name="backfill" id="backfill" class="button-primary-inactive" value="Generate Missing Byline Arrays" disabled="disabled"  /></form>
-<div id="backfillerror"></div>
-</div>
-
-<?php
-}
