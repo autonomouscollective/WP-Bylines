@@ -29,10 +29,13 @@ function person_tax_create() {
 add_action( 'init', 'person_tax_create' );
 
 /**
- * Remove the Person metabox from posts.
+ * Remove the Person metabox from all post types.
  */
 function remove_person_meta_box() {
-	remove_meta_box( 'tagsdiv-person', 'post', 'side' );
+	$post_types = get_post_types( '', 'names' );
+	foreach ( $post_types as $post_type ) {
+		remove_meta_box( 'tagsdiv-person', ''. $post_type .'', 'side' );
+	}
 }
 add_action( 'admin_menu' , 'remove_person_meta_box' );
 
@@ -292,9 +295,15 @@ if( function_exists("register_field_group") ) {
 					'operator' => '!=',
 					'value' => 'state-year-report',
 				),
+				array (
+					'param' => 'post_type',
+					'operator' => '!=',
+					'value' => 'cd-report',
+				),
 			),
+
 		),
-		'menu_order' => 0,
+		'menu_order' => 15,
 		'position' => 'acf_after_title',
 		'style' => 'seamless',
 		'label_placement' => 'top',
