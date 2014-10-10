@@ -118,11 +118,11 @@ function wceg_cap_byline_migrate() {
                     $new_data[] = $person->term_id;
                 }
                 update_field('field_53f38cd042a42', $new_data);
-                // print_r($new_data);
-                // echo '<strong>'.get_the_id().'</strong>';
-                // echo '<br>'.get_the_title().'  -- Ran '. $i . '<br><br>';
+                print_r($new_data);
+                echo '<strong>'.get_the_id().'</strong>';
+                echo '<br>'.get_the_title().'  -- Ran '. $i . '<br><br>';
             } else {
-                // echo '<span style="color:red">'.get_the_title().' Had No Persons -- Ran' . $i . '</span><br><br>';
+                echo '<span style="color:red">'.get_the_title().' Had No Persons -- Ran' . $i . '</span><br><br>';
             }
             $i++;
         }
@@ -131,14 +131,14 @@ function wceg_cap_byline_migrate() {
     // Restore original post data to start through the loop again.
     wp_reset_postdata();
 
-    // Provide a count of how many posts after running this query do not have the byline_array field.
-    $results["count"] = get_missing_byline_array_count();
-    // Write json header
-    header("Content-type: application/json");
-
-    $return = json_encode($results);
-    echo $return;
-    //echo $results["count"];
+    // // Provide a count of how many posts after running this query do not have the byline_array field.
+    // $results["count"] = get_missing_byline_array_count();
+    // // Write json header
+    // header("Content-type: application/json");
+    //
+    // $return = json_encode($results);
+    // echo $return;
+    echo $results["count"];
 
     die();
 }
@@ -179,11 +179,11 @@ function hit_cap_byline_migrate() {
                     $new_data[] = $person->term_id;
                 }
                 update_field('field_53f38cd042a42', $new_data);
-                // print_r($new_data);
-                // echo '<strong>'.get_the_id().'</strong>';
-                // echo '<br>'.get_the_title().'  -- Ran '. $i . '<br><br>';
+                print_r($new_data);
+                echo '<strong>'.get_the_id().'</strong>';
+                echo '<br>'.get_the_title().'  -- Ran '. $i . '<br><br>';
             } else {
-                // echo '<span style="color:red">'.get_the_title().' Had No Persons -- Ran' . $i . '</span><br><br>';
+                echo '<span style="color:red">'.get_the_title().' Had No Persons -- Ran' . $i . '</span><br><br>';
             }
             $i++;
         }
@@ -195,11 +195,11 @@ function hit_cap_byline_migrate() {
     // Provide a count of how many posts after running this query do not have the byline_array field.
     $results["count"] = get_missing_byline_array_count();
     // Write json header
-    header("Content-type: application/json");
-
-    $return = json_encode($results);
-    echo $return;
-    //echo $results["count"];
+    // header("Content-type: application/json");
+    //
+    // $return = json_encode($results);
+    // echo $return;
+    echo $results["count"];
 
     die();
 }
