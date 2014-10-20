@@ -37,7 +37,7 @@ function remove_person_meta_box() {
 		remove_meta_box( 'tagsdiv-person', ''. $post_type .'', 'side' );
 	}
 }
-add_action( 'admin_menu' , 'remove_person_meta_box' );
+// add_action( 'admin_menu' , 'remove_person_meta_box' );
 
 function cap_byline_activate() {
 	if ( function_exists('gform_notification') ) {
@@ -394,6 +394,7 @@ function get_cap_authors($post_id, $disable_link=false, $as_array=false, $return
 		if ( true == $return_slugs ) {
 			return $byline_array;
 		} else {
+			// Because we're setting to return as an array but not to return slugs we'll return the full name of the persons in an array.
 			$return_names_array = array();
 			foreach ( $byline_array as $author ) {
 				$data = get_term_by( 'slug', $author, 'person', 'ARRAY_A');
@@ -404,7 +405,7 @@ function get_cap_authors($post_id, $disable_link=false, $as_array=false, $return
 		}
 
 	} else {
-
+		// We're compiling a byline list of the authors of this post
 		$i = 1;
 		$total_num_people = count($byline_array);
 		$output = '';
