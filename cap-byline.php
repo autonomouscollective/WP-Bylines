@@ -366,13 +366,13 @@ add_action('acf/save_post', 'cap_byline_array_set_terms', 20);
 /**
  * Returns the posts list of authors based on various criteria.
  */
-function get_cap_authors($post_id, $disable_link=false, $as_array=false, $return_slugs=true) {
+function get_cap_authors($post_id, $disable_link=false, $as_array=false, $return_slugs=true, $byline_field='byline_array') {
 	if (empty($post_id)) {
 		global $post;
 		// lets get all the people associated with this post
-		$people = get_field('byline_array');
+		$people = get_field($byline_field);
 	} else {
-		$people = get_field('byline_array', $post_id);
+		$people = get_field($byline_field, $post_id);
 	}
 
 	if ( !empty($people) ) {
@@ -416,19 +416,14 @@ function get_cap_authors($post_id, $disable_link=false, $as_array=false, $return
 				$slug = $data['slug'];
 				$id = $data['term_id'];
 				$person_twitter_handle = get_field( 'person_twitter_handle', 'person_'.$id );
-				if (!empty( $data['description'] ) ) {
-					// Simple check to see if true is passed into the get_cap_authors function.
-					// If it is then lets output the list regardless if they have bio or not with no links to profiles.
-					if ( true == $disable_link || false == get_field('person_is_linked', 'person_'.$id ) ) {
-						$output .= $name;
-					} else {
-						$output .= '<a href="'.get_bloginfo('url').'/?person='.$slug.'">'.$name.'</a>';
-						if ( !empty($person_twitter_handle) && is_singular( get_post_type() ) ) {
-							$output .= "<a href=\"https://twitter.com/intent/user?screen_name=".$person_twitter_handle."\"><img src=\"" .content_url(). "/plugins/cap-byline/bird_blue_16.png\" class=\"twitter-bird\"></a>";
-						}
-					}
-				} else {
+
+				if ( true == $disable_link || false == get_field('person_is_linked', 'person_'.$id ) ) {
 					$output .= $name;
+				} else {
+					$output .= '<a href="'.get_bloginfo('url').'/?person='.$slug.'">'.$name.'</a>';
+					if ( !empty($person_twitter_handle) && is_singular( get_post_type() ) ) {
+						$output .= "<a href=\"https://twitter.com/intent/user?screen_name=".$person_twitter_handle."\"><img src=\"" .content_url(). "/plugins/cap-byline/bird_blue_16.png\" class=\"twitter-bird\"></a>";
+					}
 				}
 
 				if ( $total_num_people > 1 && $total_num_people <= 2 ) {
@@ -483,8 +478,28 @@ if ( ! function_exists( 'get_cap_byline' ) ) {
 		} elseif ( 'bylineonly' == $type ) {
 			$markup .= ' by '.get_cap_authors(null, null, null, null);
 		} else {
-			$markup .= '<span class="byline"> by '.get_cap_authors(null, null, null, null).' </span>';
-			$markup .= '<span class="posted-on">Posted on '.$time_string.'</span>';
+
+			if( has_filter('cap_full_byline_open') ) {
+				$markup .= apply_filters('cap_full_byline_open', $content);
+			}
+
+			if ( has_filter('cap_full_byline_persons') ) {
+				$markup .= apply_filters('cap_full_byline_persons', $content);
+			} else {
+				$markup .= '<span class="byline"> by ';
+				$markup .= get_cap_authors(null, null, null, null);
+				$markup .= '</span>';
+			}
+
+			if( has_filter('cap_full_byline_time') ) {
+				$markup .= apply_filters('cap_full_byline_time', $content);
+			} else {
+				$markup .= ' <span class="posted-on">Posted on '.$time_string.'</span>';
+			}
+
+			if( has_filter('cap_full_byline_close') ) {
+				$markup .= apply_filters('cap_full_byline_close', $content);
+			}
 		}
 		return $markup;
 	}
