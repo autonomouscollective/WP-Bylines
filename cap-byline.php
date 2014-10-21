@@ -37,9 +37,14 @@ function remove_person_meta_box() {
 		remove_meta_box( 'tagsdiv-person', ''. $post_type .'', 'side' );
 	}
 }
-// add_action( 'admin_menu' , 'remove_person_meta_box' );
-
+add_action( 'admin_menu' , 'remove_person_meta_box' );
+/**
+ * On CAP Byline activation run these actions
+ */
 function cap_byline_activate() {
+	/**
+	 * Create the Gravity Form contact form for bios
+	 */
 	if ( function_exists('gform_notification') ) {
 		$form = Array (
 			'labelPlacement' => 'top_label',
@@ -450,9 +455,8 @@ if ( ! function_exists( 'get_cap_byline' ) ) {
  * Display the list of authors along with the post time.
  */
 	function get_cap_byline($type, $post_id) {
-		if (isset($post_id)) {
-			$post = get_post($post_id);
-		} else {
+		// If we're not passing a post id in here for some reason lets try to get one from the post global.
+		if (!isset($post_id)) {
 			global $post;
 		}
 		// If is a single post page display the time, otherwise just display only the date.
@@ -480,7 +484,7 @@ if ( ! function_exists( 'get_cap_byline' ) ) {
 		if ( 'dateonly' == $type ) {
 			 $markup .= '<span class="posted-on">'.$time_string.'</span>';
 		} elseif ( 'bylineonly' == $type ) {
-			$markup .= ' by '.get_cap_authors($post->ID, null, null, null, null);
+			$markup .= ' by '.get_cap_authors($post->ID, null, null, null);
 		} else {
 
 			if( has_filter('cap_full_byline_open') ) {
@@ -491,7 +495,7 @@ if ( ! function_exists( 'get_cap_byline' ) ) {
 				$markup .= apply_filters('cap_full_byline_persons', $content, $post_id);
 			} else {
 				$markup .= '<span class="byline"> by ';
-				$markup .= get_cap_authors($post->ID, null, null, null, null);
+				$markup .= get_cap_authors($post->ID, null, null, null);
 				$markup .= '</span>';
 			}
 
