@@ -449,8 +449,12 @@ if ( ! function_exists( 'get_cap_byline' ) ) {
 /**
  * Display the list of authors along with the post time.
  */
-	function get_cap_byline($type) {
-		global $post;
+	function get_cap_byline($type, $post_id) {
+		if (isset($post_id)) {
+			$post = get_post($post_id);
+		} else {
+			global $post;
+		}
 		// If is a single post page display the time, otherwise just display only the date.
 		if (is_singular()) {
 			$time_format = 'F j, Y \a\t g:i a';
@@ -458,7 +462,7 @@ if ( ! function_exists( 'get_cap_byline' ) ) {
 			$time_format = 'F j, Y';
 		}
 		// Here we check to make sure the post's post time is not the same as the posts updated time within the hour. We also check to make sure that the meta key that manually disables this function isn't true.
-		if ( get_the_modified_time('jnyH') != get_the_time('jnyH') && false == get_post_meta( get_the_ID(), 'cap_disable_updated_time', true ) && false == get_field( 'global_disable_update_time', 'options' ) ) {
+		if ( get_the_modified_time('jnyH') != get_the_time('jnyH') && false == get_post_meta( $post->ID, 'cap_disable_updated_time', true ) && false == get_field( 'global_disable_update_time', 'options' ) ) {
 			$time_string = '<time class="published" datetime="%1$s">%2$s</time>';
 			$time_string .= '&nbsp;<time class="updated" datetime="%3$s">Updated: %4$s</time>';
 		} else {
@@ -466,17 +470,17 @@ if ( ! function_exists( 'get_cap_byline' ) ) {
 		}
 
 		$time_string = sprintf( $time_string,
-			esc_attr( get_the_date($time_format) ), //%1$s
-			esc_html( get_the_date($time_format) ), //%2$s
-			esc_attr( get_the_modified_date($time_format) ), //%3$s
-			esc_html( get_the_modified_date($time_format) ) //%4$s
+			esc_attr( get_the_date($time_format, $post->ID) ), //%1$s
+			esc_html( get_the_date($time_format, $post->ID) ), //%2$s
+			esc_attr( get_the_modified_date($time_format, $post->ID) ), //%3$s
+			esc_html( get_the_modified_date($time_format, $post->ID) ) //%4$s
 		);
 
 		$markup = '';
 		if ( 'dateonly' == $type ) {
 			 $markup .= '<span class="posted-on">'.$time_string.'</span>';
 		} elseif ( 'bylineonly' == $type ) {
-			$markup .= ' by '.get_cap_authors(null, null, null, null);
+			$markup .= ' by '.get_cap_authors($post->ID, null, null, null, null);
 		} else {
 
 			if( has_filter('cap_full_byline_open') ) {
@@ -484,15 +488,15 @@ if ( ! function_exists( 'get_cap_byline' ) ) {
 			}
 
 			if ( has_filter('cap_full_byline_persons') ) {
-				$markup .= apply_filters('cap_full_byline_persons', $content);
+				$markup .= apply_filters('cap_full_byline_persons', $content, $post_id);
 			} else {
 				$markup .= '<span class="byline"> by ';
-				$markup .= get_cap_authors(null, null, null, null);
+				$markup .= get_cap_authors($post->ID, null, null, null, null);
 				$markup .= '</span>';
 			}
 
 			if( has_filter('cap_full_byline_time') ) {
-				$markup .= apply_filters('cap_full_byline_time', $content);
+				$markup .= apply_filters('cap_full_byline_time', $content, $post_id);
 			} else {
 				$markup .= ' <span class="posted-on">Posted on '.$time_string.'</span>';
 			}
@@ -507,7 +511,7 @@ if ( ! function_exists( 'get_cap_byline' ) ) {
 }
 
 function cap_byline($type) {
-	echo get_cap_byline($type);
+	echo get_cap_byline($type, null);
 }
 
 if ( ! function_exists( 'cap_person_bio' ) ) {
