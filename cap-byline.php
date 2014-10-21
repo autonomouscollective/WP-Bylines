@@ -9,6 +9,9 @@
  */
 $plugin_dir = plugin_dir_path( __FILE__ );
 
+/**
+ * Create person taxonomy
+ */
 function person_tax_create() {
 	register_taxonomy(
 		'person',
@@ -137,6 +140,9 @@ function cap_byline_activate() {
 }
 register_activation_hook( __FILE__, 'cap_byline_activate' );
 
+/**
+ * Register fields
+ */
 if( function_exists("register_field_group") ) {
 	register_field_group(array (
 		'id' => 'acf_person-settings',
@@ -331,8 +337,8 @@ function cap_byline_array_set_terms( $post_id ) {
 		// Get the ACF Byline Array
 		$field_data = get_field('byline_array');
 		$persons = array();
-		// Check to see if this post has any authors if it does not proceed with auto selection
-		// we do this check becuase we don't want to continue to autoselect if they've removed the autoselect author.
+		// Check to see if this post has any authors if it does not, proceed with auto selection
+		// we do this check becuase we don't want to continue to autoselect if they've removed the autoselect author in one off cases.
 		// Also we're presuming to autoselect as a function only if no authors are present.
 		if ( empty($field_data) ) {
 			// Get the author information
@@ -354,7 +360,7 @@ function cap_byline_array_set_terms( $post_id ) {
 
 		}
 
-		// Go through the persons from the field add themm to the persons array.
+		// Go through the persons from the field add them to the persons array.
 		foreach ($field_data as $data) {
 			$persons[] = $data;
 		}
@@ -370,20 +376,18 @@ add_action('acf/save_post', 'cap_byline_array_set_terms', 20);
 
 /**
  * Returns the posts list of authors based on various criteria.
+ * @param $post_id is the post id, we should pass this in always.
+ * @param $disable_link defaults to false, if set to true the output is only the name
+ * @param $as_array defaults to false, if set to true returns as an array of persons either as slug or name
+ * @param $return_slugs defaults to true, if $as_array is set to true return person slugs if set to false then return names
+ * @param $byline_field defaults to byline_array. This allows you to create identical other fields such as "with" for American Progress and check for that new field.
  */
 function get_cap_authors($post_id, $disable_link=false, $as_array=false, $return_slugs=true, $byline_field='byline_array') {
-	if (empty($post_id)) {
-		global $post;
-		// lets get all the people associated with this post
-		$people = get_field($byline_field);
-	} else {
-		$people = get_field($byline_field, $post_id);
-	}
+	$people = get_field($byline_field, $post_id);
 
 	if ( !empty($people) ) {
-		// lets setup an array to organize these people based on some conditions below
+		// let's setup an array to organize these people based on some conditions below
 		$byline_array = array();
-		// add people who do not have a description ("guest authors, contributors")
 		foreach ( $people as $person ) {
 			$get_byline = get_term_by( 'id', $person, 'person' );
 			$byline_array[] = $get_byline->slug;
@@ -422,10 +426,12 @@ function get_cap_authors($post_id, $disable_link=false, $as_array=false, $return
 				$id = $data['term_id'];
 				$person_twitter_handle = get_field( 'person_twitter_handle', 'person_'.$id );
 
+				//If disable links is set to true or if this person specifically has no linked bio, display name only.
 				if ( true == $disable_link || false == get_field('person_is_linked', 'person_'.$id ) ) {
 					$output .= $name;
 				} else {
-					$output .= '<a href="'.get_bloginfo('url').'/?person='.$slug.'">'.$name.'</a>';
+					$output .= '<a href="/?person='.$slug.'">'.$name.'</a>';
+					// Checks for single instance of any post type, not just Wordpress defaults
 					if ( !empty($person_twitter_handle) && is_singular( get_post_type() ) ) {
 						$output .= "<a href=\"https://twitter.com/intent/user?screen_name=".$person_twitter_handle."\"><img src=\"" .content_url(). "/plugins/cap-byline/bird_blue_16.png\" class=\"twitter-bird\"></a>";
 					}
@@ -443,79 +449,75 @@ function get_cap_authors($post_id, $disable_link=false, $as_array=false, $return
 				$i++;
 			}
 		} else {
+			/**
+			 * @todo Replace with wp_error
+			 */
 			$output = "<!--Found No Data, Check CAP Byline Plugin-->";
 		}
 		return $output;
 	}
 }
 
-// Check for existence of cap_byline function as a theme may override this functionality.
-if ( ! function_exists( 'get_cap_byline' ) ) {
 /**
  * Display the list of authors along with the post time.
  */
-	function get_cap_byline($type, $post_id) {
-		// If we're not passing a post id in here for some reason lets try to get one from the post global.
-		if (!isset($post_id)) {
-			global $post;
-		}
-		// If is a single post page display the time, otherwise just display only the date.
-		if (is_singular()) {
-			$time_format = 'F j, Y \a\t g:i a';
-		} else {
-			$time_format = 'F j, Y';
-		}
-		// Here we check to make sure the post's post time is not the same as the posts updated time within the hour. We also check to make sure that the meta key that manually disables this function isn't true.
-		if ( get_the_modified_time('jnyH') != get_the_time('jnyH') && false == get_post_meta( $post->ID, 'cap_disable_updated_time', true ) && false == get_field( 'global_disable_update_time', 'options' ) ) {
-			$time_string = '<time class="published" datetime="%1$s">%2$s</time>';
-			$time_string .= '&nbsp;<time class="updated" datetime="%3$s">Updated: %4$s</time>';
-		} else {
-			$time_string = '<time class="published" datetime="%1$s">%2$s</time>';
-		}
-
-		$time_string = sprintf( $time_string,
-			esc_attr( get_the_date($time_format, $post->ID) ), //%1$s
-			esc_html( get_the_date($time_format, $post->ID) ), //%2$s
-			esc_attr( get_the_modified_date($time_format, $post->ID) ), //%3$s
-			esc_html( get_the_modified_date($time_format, $post->ID) ) //%4$s
-		);
-
-		$markup = '';
-		if ( 'dateonly' == $type ) {
-			 $markup .= '<span class="posted-on">'.$time_string.'</span>';
-		} elseif ( 'bylineonly' == $type ) {
-			$markup .= ' by '.get_cap_authors($post->ID, null, null, null);
-		} else {
-
-			if( has_filter('cap_full_byline_open') ) {
-				$markup .= apply_filters('cap_full_byline_open', $content);
-			}
-
-			if ( has_filter('cap_full_byline_persons') ) {
-				$markup .= apply_filters('cap_full_byline_persons', $content, $post_id);
-			} else {
-				$markup .= '<span class="byline"> by ';
-				$markup .= get_cap_authors($post->ID, null, null, null);
-				$markup .= '</span>';
-			}
-
-			if( has_filter('cap_full_byline_time') ) {
-				$markup .= apply_filters('cap_full_byline_time', $content, $post_id);
-			} else {
-				$markup .= ' <span class="posted-on">Posted on '.$time_string.'</span>';
-			}
-
-			if( has_filter('cap_full_byline_close') ) {
-				$markup .= apply_filters('cap_full_byline_close', $content);
-			}
-		}
-		return $markup;
+function get_cap_byline($type, $post_id) {
+	// If is a single post page display the time, otherwise just display only the date.
+	if (is_singular()) {
+		$time_format = 'F j, Y \a\t g:i a';
+	} else {
+		$time_format = 'F j, Y';
+	}
+	// Here we check to make sure the post's post time is not the same as the posts updated time within the hour. We also check to make sure that the meta key that manually disables this function isn't true.
+	if ( get_the_modified_time('jnyH') != get_the_time('jnyH') && false == get_post_meta( $post->ID, 'cap_disable_updated_time', true ) && false == get_field( 'global_disable_update_time', 'options' ) ) {
+		$time_string = '<time class="published" datetime="%1$s">%2$s</time>';
+		$time_string .= '&nbsp;<time class="updated" datetime="%3$s">Updated: %4$s</time>';
+	} else {
+		$time_string = '<time class="published" datetime="%1$s">%2$s</time>';
 	}
 
+	$time_string = sprintf( $time_string,
+		esc_attr( get_the_date($time_format, $post_id) ), //%1$s
+		esc_html( get_the_date($time_format, $post_id) ), //%2$s
+		esc_attr( get_the_modified_date($time_format, $post_id) ), //%3$s
+		esc_html( get_the_modified_date($time_format, $post_id) ) //%4$s
+	);
+
+	$markup = '';
+	if ( 'dateonly' == $type ) {
+		 $markup .= '<span class="posted-on">'.$time_string.'</span>';
+	} elseif ( 'bylineonly' == $type ) {
+		$markup .= ' by '.get_cap_authors($post_id, null, null, null);
+	} else {
+
+		if( has_filter('cap_full_byline_open') ) {
+			$markup .= apply_filters('cap_full_byline_open', $content);
+		}
+
+		if ( has_filter('cap_full_byline_persons') ) {
+			$markup .= apply_filters('cap_full_byline_persons', $content, $post_id);
+		} else {
+			$markup .= '<span class="byline"> by ';
+			$markup .= get_cap_authors($post_id, null, null, null);
+			$markup .= '</span>';
+		}
+
+		if( has_filter('cap_full_byline_time') ) {
+			$markup .= apply_filters('cap_full_byline_time', $content, $post_id);
+		} else {
+			$markup .= ' <span class="posted-on">Posted on '.$time_string.'</span>';
+		}
+
+		if( has_filter('cap_full_byline_close') ) {
+			$markup .= apply_filters('cap_full_byline_close', $content);
+		}
+	}
+	return $markup;
 }
 
 function cap_byline($type) {
-	echo get_cap_byline($type, null);
+	global $post;
+	echo get_cap_byline($type, $post->ID);
 }
 
 if ( ! function_exists( 'cap_person_bio' ) ) {
