@@ -662,4 +662,21 @@ function cap_person_route_notification($notification, $form , $entry) {
 }
 add_filter( 'gform_notification', 'cap_person_route_notification', 10, 3 );
 
+function cap_rss_other_author($name){
+    global $post;
+    if( is_feed() ){
+        $authors = get_cap_authors($post->ID, true, true, false);
+        if($authors !== NULL){
+            $name = "";
+            for($i = 0; $i < count($authors); $i++){
+                $name .= $authors[$i] . ', ';
+            }
+            $name = rtrim($name, ', ');
+        }
+    }
+    return $name;
+}
+add_filter( 'the_author', 'cap_rss_other_author' );
+add_filter ( 'get_the_author_display_name', 'cap_rss_other_author' ) ;
+
 include $plugin_dir.'/migration.php';
