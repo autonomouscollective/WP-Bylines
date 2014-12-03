@@ -7,7 +7,47 @@
  * Author URI: http://sethrubenstein.info
  * License: GPL2
  */
+$plugin_dir = plugin_dir_path( __FILE__ );
+
+/**
+ * Create person taxonomy
+ */
+function person_tax_create() {
+	register_taxonomy(
+		'person',
+		get_post_types(),
+		array(
+			'label' => __( 'Person' ),
+			'rewrite' => array( 'slug' => 'person', 'with_front' => false ),
+			'hierarchical' => false,
+			'show_admin_column' => true,
+			'capabilities' => array(
+				'manage_terms' => 'edit_others_posts',
+				'edit_terms' => 'edit_others_posts',
+				'delete_terms' => 'edit_others_posts'
+			)
+		)
+	);
+}
+add_action( 'init', 'person_tax_create' );
+
+/**
+ * Remove the Person metabox from all post types.
+ */
+function remove_person_meta_box() {
+	$post_types = get_post_types( '', 'names' );
+	foreach ( $post_types as $post_type ) {
+		remove_meta_box( 'tagsdiv-person', ''. $post_type .'', 'side' );
+	}
+}
+add_action( 'admin_menu' , 'remove_person_meta_box' );
+/**
+ * On CAP Byline activation run these actions
+ */
 function cap_byline_activate() {
+	/**
+	 * Create the Gravity Form contact form for bios
+	 */
 	if ( function_exists('gform_notification') ) {
 		$form = Array (
 			'labelPlacement' => 'top_label',
@@ -100,6 +140,9 @@ function cap_byline_activate() {
 }
 register_activation_hook( __FILE__, 'cap_byline_activate' );
 
+/**
+ * Register fields
+ */
 if( function_exists("register_field_group") ) {
 	register_field_group(array (
 		'id' => 'acf_person-settings',
@@ -232,102 +275,135 @@ if( function_exists("register_field_group") ) {
 		),
 		'menu_order' => 0,
 	));
-}
-
-function person_tax_create() {
-	register_taxonomy(
-		'person',
-		array('post','page'),
-		array(
-			'label' => __( 'Person' ),
-			'rewrite' => array( 'slug' => 'person', 'with_front' => false ),
-			'hierarchical' => false,
-			'show_admin_column' => true,
-			'capabilities' => array(
-				'manage_terms' => 'edit_others_posts',
-				'edit_terms' => 'edit_others_posts',
-				'delete_terms' => 'edit_others_posts'
-			)
-		)
-	);
-}
-add_action( 'init', 'person_tax_create' );
-
-function cap_person_autoselect_author( $post_id ){
-	global $post;
-	$author_slug = get_the_author_meta( 'user_login', $post->post_author );
-	$default_byline_override = get_user_meta( $post->post_author, '_default_byline', true );
-	$default_byline = get_term_by( 'id', $default_byline_override, 'person' );
-	$does_this_post_have_authors = wp_get_post_terms($post->ID, 'person', array("fields" => "ids"));
-
-	// check to see if this post has any authors if it does not proceed with auto selection
-	if (empty($does_this_post_have_authors)) {
-		// if the author has a person record then set that automatically
-		if ( term_exists( $author_slug, 'person' ) && 0 == get_field( 'disable_auto_author_select','options' ) ) {
-			wp_set_post_terms($post_id, $author_slug, 'person', true);
-		} elseif (!empty($default_byline_override)) {
-		// if the user creating this post has a byline override set then set that as the byline automatically
-			wp_set_post_terms($post_id, $default_byline->slug, 'person', true);
-		}
-	}
-}
-add_action( 'save_post', 'cap_person_autoselect_author' );
-
-function get_cap_authors($post_id, $disable_link=false, $as_array=false, $return_slugs=true) {
-	if (empty($post_id)) {
-		global $post;
-		// lets get all the people associated with this post
-		$people = get_the_terms( $post->ID, 'person' );
-	} else {
-		$people = get_the_terms( $post_id, 'person' );
-	}
-
-	// lets setup an array to organize these people based on some conditions below
-	$byline_array = array();
-
-	$primary_author_slug = '';
-	// check to see if we're disabling auto author selection.
-	if ( 0 == get_field( 'disable_auto_author_select','options' ) ) {
-		// get the actual author of this post
-		$primary_author_slug .= get_the_author_meta( 'user_login', $post->post_author );
-		// add the author to the start of the authors list
-		foreach ( $people as $person ) {
-			if ( !empty( $person->description ) ) {
-				if ( $primary_author_slug == $person->slug ) {
-					$byline_array[] = $primary_author_slug;
-				}
-			}
-		}
-	}
 	/**
-	 * add people who have a description
-	 * this is our condition for recognizing this person as having a bio page
-	 * and then check to make sure it's not the original author. Proceed to add to array.
-	 * @todo maybe we change the !empty person->description check to false == get_field('person_is_linked', 'person_'.$person->term_id )
-	 * but I feel like this is a better auto sort condition than not. -- Seth
+	 * CAP Byline Field
 	 */
-	foreach ( $people as $person ) {
-		if ( !empty( $person->description ) ) {
-			if ( $primary_author_slug != $person->slug ) {
-				$byline_array[] = $person->slug;
+	register_field_group(array (
+		'key' => 'group_53f38caa7634f',
+		'title' => 'Byline',
+		'fields' => array (
+			array (
+				'key' => 'field_53f38cd042a42',
+				'label' => 'Byline',
+				'name' => 'byline_array',
+				'prefix' => '',
+				'type' => 'taxonomy',
+				'instructions' => 'This field will autocomplete names. Start typing to add existing person(s) to this post.',
+				'required' => 0,
+				'conditional_logic' => 0,
+				'taxonomy' => 'person',
+				'field_type' => 'multi_select',
+				'allow_null' => 0,
+				'load_save_terms' => 0,
+				'return_format' => 'id',
+				'multiple' => 0,
+			),
+		),
+		'location' => array (
+			array (
+				array (
+					'param' => 'post_type',
+					'operator' => '!=',
+					'value' => 'state-year-report',
+				),
+				array (
+					'param' => 'post_type',
+					'operator' => '!=',
+					'value' => 'cd-report',
+				),
+			),
+
+		),
+		'menu_order' => 15,
+		'position' => 'acf_after_title',
+		'style' => 'seamless',
+		'label_placement' => 'top',
+		'instruction_placement' => 'field',
+		'hide_on_screen' => '',
+	));
+}
+
+if( function_exists('acf_add_options_page') ) {
+	acf_add_options_page();
+}
+
+/**
+ * Sets the person terms to the post via the ACF Byline Array field.
+ */
+function cap_byline_array_set_terms( $post_id ) {
+	global $post;
+	// Dont run this on the state-year-report post type
+	if ( !is_singular('state-year-report') ) {
+		// Get the ACF Byline Array
+		$field_data = get_field('byline_array');
+		$persons = array();
+		// Check to see if this post has any authors if it does not, proceed with auto selection
+		// we do this check becuase we don't want to continue to autoselect if they've removed the autoselect author in one off cases.
+		// Also we're presuming to autoselect as a function only if no authors are present.
+		if ( empty($field_data) ) {
+			// Get the author information
+			$author_slug = get_the_author_meta( 'user_login', $post->post_author );
+			$author_data = get_term_by( 'slug', $author_slug, 'person' );
+			$author_id = $author_data->term_id;
+			// Check for an author byline override. Basically this is a intern function.
+			$default_byline_override = get_user_meta( $post->post_author, '_default_byline', true );
+			$default_byline = get_term_by( 'id', $default_byline_override, 'person' );
+			$default_byline_id = $default_byline->term_id;
+
+			// If a override is present use that first
+			if ( !empty($default_byline_override) && false === get_field( 'disable_auto_author_select','options' ) ) {
+				$persons[] = $default_byline_id;
+			// If a person exists with the slug of the author then auto add it.
+			} elseif ( term_exists( $author_slug, 'person' ) && false === get_field( 'disable_auto_author_select','options' ) ) {
+				$persons[] = $author_id;
 			}
+
 		}
-	}
-	// add people who do not have a description ("guest authors, contributors")
-	foreach ( $people as $person ) {
-		if ( empty( $person->description ) ) {
-			$byline_array[] = $person->slug;
+
+		// Go through the persons from the field add them to the persons array.
+		foreach ($field_data as $data) {
+			$persons[] = $data;
 		}
+		// Go back and update the field with the new data
+		update_field('field_53f38cd042a42', $persons);
+		// Set this posts person terms to the persons array
+		wp_set_post_terms( $post_id, $persons, 'person', false );
 	}
+}
+// run before ACF saves the $_POST['fields'] data
+add_action('acf/save_post', 'cap_byline_array_set_terms', 20);
 
 
-	// check for the display function, if as_array is set to true then just return the array...
+/**
+ * Returns the posts list of authors based on various criteria.
+ * @param $post_id is the post id, we should pass this in always.
+ * @param $disable_link defaults to false, if set to true the output is only the name
+ * @param $as_array defaults to false, if set to true returns as an array of persons either as slug or name
+ * @param $return_slugs defaults to true, if $as_array is set to true return person slugs if set to false then return names
+ * @param $byline_field defaults to byline_array. This allows you to create identical other fields such as "with" for American Progress and check for that new field.
+ */
+function get_cap_authors($post_id, $disable_link=false, $as_array=false, $return_slugs=true, $byline_field='byline_array') {
+	$people = get_field($byline_field, $post_id);
+
+	if ( !empty($people) ) {
+		// let's setup an array to organize these people based on some conditions below
+		$byline_array = array();
+		foreach ( $people as $person ) {
+			$get_byline = get_term_by( 'id', $person, 'person' );
+			$byline_array[] = $get_byline->slug;
+		}
+	} else {
+		$byline_array = '';
+	}
+
+	// Check for the display function, if as_array is set to true then just return the array...
 	// if not then proceed with the listing function.
 	if ( true == $as_array ) {
 
 		if ( true == $return_slugs ) {
 			return $byline_array;
 		} else {
+			// Because we're setting to return as an array but not to return slugs we'll return the full name of the persons in an array.
 			$return_names_array = array();
 			foreach ( $byline_array as $author ) {
 				$data = get_term_by( 'slug', $author, 'person', 'ARRAY_A');
@@ -338,86 +414,110 @@ function get_cap_authors($post_id, $disable_link=false, $as_array=false, $return
 		}
 
 	} else {
-
+		// We're compiling a byline list of the authors of this post
 		$i = 1;
 		$total_num_people = count($byline_array);
 		$output = '';
-		foreach ( $byline_array as $author ) {
-			$data = get_term_by( 'slug', $author, 'person', 'ARRAY_A');
-			//print_r($data);
-			$name = $data['name'];
-			$slug = $data['slug'];
-			$id = $data['term_id'];
-			$person_twitter_handle = get_field( 'person_twitter_handle', 'person_'.$id );
-			if (!empty( $data['description'] ) ) {
-				// Simple check to see if true is passed into the get_cap_authors function.
-				// If it is then lets output the list regardless if they have bio or not with no links to profiles.
+		if (!empty($byline_array)) {
+			foreach ( $byline_array as $author ) {
+				$data = get_term_by( 'slug', $author, 'person', 'ARRAY_A');
+				$name = $data['name'];
+				$slug = $data['slug'];
+				$id = $data['term_id'];
+				$person_twitter_handle = get_field( 'person_twitter_handle', 'person_'.$id );
+
+				//If disable links is set to true or if this person specifically has no linked bio, display name only.
 				if ( true == $disable_link || false == get_field('person_is_linked', 'person_'.$id ) ) {
 					$output .= $name;
 				} else {
-					$output .= '<a href="'.get_bloginfo('url').'/?person='.$slug.'">'.$name.'</a>';
+					$output .= '<a href="/?person='.$slug.'">'.$name.'</a>';
+					// Checks for single instance of any post type, not just Wordpress defaults
 					if ( !empty($person_twitter_handle) && is_singular( get_post_type() ) ) {
-                        $output .= "<a href=\"https://twitter.com/intent/user?screen_name=".$person_twitter_handle."\"><img src=\"" .content_url(). "/plugins/cap-byline/bird_blue_16.png\" class=\"twitter-bird\"></a>";
-                    }
+						$output .= "<a href=\"https://twitter.com/intent/user?screen_name=".$person_twitter_handle."\"><img src=\"" .content_url(). "/plugins/cap-byline/bird_blue_16.png\" class=\"twitter-bird\"></a>";
+					}
 				}
-			} else {
-				$output .= $name;
-			}
 
-			if ( $total_num_people > 1 ) {
-				if ( $i != $total_num_people ) {
-					$output .= ', ';
+				if ( $total_num_people > 1 && $total_num_people <= 2 ) {
+					if ( $i != $total_num_people ) {
+						$output .= ' & ';
+					}
+				} elseif ( $total_num_people > 2 ) {
+					if ( $i != $total_num_people ) {
+						$output .= ', ';
+					}
 				}
+				$i++;
 			}
-			$i++;
+		} else {
+			/**
+			 * @todo Replace with wp_error
+			 */
+			$output = "<!--Found No Data, Check CAP Byline Plugin-->";
 		}
 		return $output;
-
 	}
 }
 
-// Check for existence of cap_byline function as a theme may override this functionality.
-if ( ! function_exists( 'get_cap_byline' ) ) {
-
-	function get_cap_byline($type) {
-		global $post;
-		// If is a single post page display the time, otherwise just display only the date.
-		if (is_singular()) {
-			$time_format = 'F j, Y \a\t g:i a';
-		} else {
-			$time_format = 'F j, Y';
-		}
-		// Here we check to make sure the post's post time is not the same as the posts updated time within the hour. We also check to make sure that the meta key that manually disables this function isn't true.
-		if ( get_the_modified_time('jnyH') != get_the_time('jnyH') && false == get_post_meta( get_the_ID(), 'cap_disable_updated_time', true ) && false == get_field( 'global_disable_update_time', 'options' ) ) {
-			$time_string = '<time class="published" datetime="%1$s">%2$s</time>';
-			$time_string .= '&nbsp;<time class="updated" datetime="%3$s">Updated: %4$s</time>';
-		} else {
-			$time_string = '<time class="published" datetime="%1$s">%2$s</time>';
-		}
-
-		$time_string = sprintf( $time_string,
-			esc_attr( get_the_date($time_format) ), //%1$s
-			esc_html( get_the_date($time_format) ), //%2$s
-			esc_attr( get_the_modified_date($time_format) ), //%3$s
-			esc_html( get_the_modified_date($time_format) ) //%4$s
-		);
-
-		$markup = '';
-		if ( 'dateonly' == $type ) {
-			 $markup .= '<span class="posted-on">'.$time_string.'</span>';
-		} elseif ( 'bylineonly' == $type ) {
-			$markup .= ' by '.get_cap_authors(null, null, null, null);
-		} else {
-			$markup .= '<span class="byline"> by '.get_cap_authors(null, null, null, null).' </span>';
-			$markup .= '<span class="posted-on">Posted on '.$time_string.'</span>';
-		}
-		return $markup;
+/**
+ * Display the list of authors along with the post time.
+ */
+function get_cap_byline($type, $post_id) {
+	// If is a single post page display the time, otherwise just display only the date.
+	if (is_singular()) {
+		$time_format = 'F j, Y \a\t g:i a';
+	} else {
+		$time_format = 'F j, Y';
+	}
+	// Here we check to make sure the post's post time is not the same as the posts updated time within the hour. We also check to make sure that the meta key that manually disables this function isn't true.
+	if ( get_the_modified_time('jnyH') != get_the_time('jnyH') && false == get_post_meta( $post->ID, 'cap_disable_updated_time', true ) && false == get_field( 'global_disable_update_time', 'options' ) ) {
+		$time_string = '<time class="published" datetime="%1$s">%2$s</time>';
+		$time_string .= '&nbsp;<time class="updated" datetime="%3$s">Updated: %4$s</time>';
+	} else {
+		$time_string = '<time class="published" datetime="%1$s">%2$s</time>';
 	}
 
+	$time_string = sprintf( $time_string,
+		esc_attr( get_the_date($time_format, $post_id) ), //%1$s
+		esc_html( get_the_date($time_format, $post_id) ), //%2$s
+		esc_attr( get_the_modified_date($time_format, $post_id) ), //%3$s
+		esc_html( get_the_modified_date($time_format, $post_id) ) //%4$s
+	);
+
+	$markup = '';
+	if ( 'dateonly' == $type ) {
+		 $markup .= '<span class="posted-on">'.$time_string.'</span>';
+	} elseif ( 'bylineonly' == $type ) {
+		$markup .= ' by '.get_cap_authors($post_id, null, null, null);
+	} else {
+
+		if( has_filter('cap_full_byline_open') ) {
+			$markup .= apply_filters('cap_full_byline_open', $content);
+		}
+
+		if ( has_filter('cap_full_byline_persons') ) {
+			$markup .= apply_filters('cap_full_byline_persons', $content, $post_id);
+		} else {
+			$markup .= '<span class="byline"> by ';
+			$markup .= get_cap_authors($post_id, null, null, null);
+			$markup .= '</span>';
+		}
+
+		if( has_filter('cap_full_byline_time') ) {
+			$markup .= apply_filters('cap_full_byline_time', $content, $post_id);
+		} else {
+			$markup .= ' <span class="posted-on">Posted on '.$time_string.'</span>';
+		}
+
+		if( has_filter('cap_full_byline_close') ) {
+			$markup .= apply_filters('cap_full_byline_close', $content);
+		}
+	}
+	return $markup;
 }
 
 function cap_byline($type) {
-	echo get_cap_byline($type);
+	global $post;
+	echo get_cap_byline($type, $post->ID);
 }
 
 if ( ! function_exists( 'cap_person_bio' ) ) {
@@ -561,3 +661,22 @@ function cap_person_route_notification($notification, $form , $entry) {
     return $notification ;
 }
 add_filter( 'gform_notification', 'cap_person_route_notification', 10, 3 );
+
+function cap_rss_other_author($name){
+    global $post;
+    if( is_feed() ){
+        $authors = get_cap_authors($post->ID, true, true, false);
+        if($authors !== NULL){
+            $name = "";
+            for($i = 0; $i < count($authors); $i++){
+                $name .= $authors[$i] . ', ';
+            }
+            $name = rtrim($name, ', ');
+        }
+    }
+    return $name;
+}
+add_filter( 'the_author', 'cap_rss_other_author' );
+add_filter ( 'get_the_author_display_name', 'cap_rss_other_author' ) ;
+
+include $plugin_dir.'/migration.php';
