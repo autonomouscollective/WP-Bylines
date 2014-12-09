@@ -20,7 +20,7 @@ function person_tax_create() {
 			'label' => __( 'Person' ),
 			'rewrite' => array( 'slug' => 'person', 'with_front' => false ),
 			'hierarchical' => false,
-			'show_admin_column' => true,
+			// 'show_admin_column' => true,
 			'capabilities' => array(
 				'manage_terms' => 'edit_others_posts',
 				'edit_terms' => 'edit_others_posts',
@@ -30,6 +30,22 @@ function person_tax_create() {
 	);
 }
 add_action( 'init', 'person_tax_create' );
+
+function persons_column($columns) {
+	$columns['persons'] = 'Persons';
+	return $columns;
+}
+add_filter('manage_posts_columns', 'persons_column');
+
+function show_persons_column($name) {
+	global $post;
+	switch ($name) {
+		case 'persons':
+		$views = get_cap_authors($post->ID, true, false, false);
+		echo $views;
+	}
+}
+add_action('manage_posts_custom_column',  'show_persons_column');
 
 /**
  * Remove the Person metabox from all post types.
