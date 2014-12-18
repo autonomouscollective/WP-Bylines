@@ -596,7 +596,7 @@ if ( ! function_exists( 'cap_person_bio' ) ) {
 			</script>
 			';
 			$markup .= '<div id="contact-modal" class="modal"><div class="modal-wrapper"><div class="close-modal"><img src="'.plugin_dir_url('cap-byline.php').'/cap-byline/close_circle.png"></div><div class="modal-window">';
-			$markup .= gravity_form( get_field('author_contact_form_id', 'options'), false, false, false, array('author_contact_email' => ''.$person_email.''), true, 25, false );
+			$markup .= gravity_form( get_field('author_contact_form_id', 'options'), false, false, false, array('author_contact_email' => ''.$person->term_id.''), true, 25, false );
 			gravity_form_enqueue_scripts( get_field('author_contact_form_id', 'options'), true );
 			$markup .= '</div></div></div>';
 			$markup .= '
@@ -668,7 +668,7 @@ if ( ! function_exists( 'cap_person_bio' ) ) {
 
 function cap_byline_contact_form_email($entry, $form) {
 	if ( $form["id"] == get_field('author_contact_form_id', 'options') ) {
-		$email_to = $entry[4];
+		$email_to = get_field( 'person_email', 'person_'.$entry[4] );
 		$email_from_first = $entry['1.3'];
 		$email_from_last = $entry['1.6'];
 		$email_from = $entry[2];
