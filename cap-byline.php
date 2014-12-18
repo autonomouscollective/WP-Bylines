@@ -669,9 +669,13 @@ if ( ! function_exists( 'cap_person_bio' ) ) {
 function cap_byline_contact_form_email($entry, $form) {
 	if ( $form["id"] == get_field('author_contact_form_id', 'options') ) {
 		$email_to = $entry[4];
+		$email_from_first = $entry['1.3'];
+		$email_from_last = $entry['1.6'];
+		$email_from = $entry[2];
+		$email_message = $entry[3];
 		if ( !empty($email_to) ){
-			$headers = 'From: TP Test Site <server@local.dev>' . "\r\n";
-			wp_mail($email_to, 'Test Subject', 'Test Message', $headers );
+			$headers = 'From: '.$email_from_first.' '.$email_from_last.' <'.$email_from.'>' . "\r\n";
+			wp_mail( $email_to, 'You have a new message from '.$email_from_first.' '.$email_from_last.'', $email_message, $headers );
 		}
 	}
 }
