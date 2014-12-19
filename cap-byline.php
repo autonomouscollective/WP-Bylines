@@ -672,7 +672,8 @@ function cap_byline_contact_form_email($entry, $form) {
 		$email_from_first = $entry['1.3'];
 		$email_from_last = $entry['1.6'];
 		$email_from = $entry[2];
-		$email_message = $entry[3];
+		$email_message = '<strong>You have a new message from '.$email_from_first.' '.$email_from_last.' at '.$email_from.'</strong><br><br>';
+		$email_message .= $entry[3];
 		if ( !empty($email_to) ){
 			$headers = 'From: '.$email_from_first.' '.$email_from_last.' <'.$email_from.'>' . "\r\n";
 			wp_mail( $email_to, 'You have a new message from '.$email_from_first.' '.$email_from_last.'', $email_message, $headers );
