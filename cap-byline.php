@@ -112,7 +112,7 @@ function cap_byline_activate() {
 						'id' => 4,
 						'size' => 'medium',
 						'type' => 'hidden',
-						'inputName' => 'author_contact_to',
+						'inputName' => 'author_contact_email',
 						'label' => 'To',
 						'formId' => 2,
 						'pageNumber' => 1,
@@ -596,8 +596,8 @@ if ( ! function_exists( 'cap_person_bio' ) ) {
 			</script>
 			';
 			$markup .= '<div id="contact-modal" class="modal"><div class="modal-wrapper"><div class="close-modal"><img src="'.plugin_dir_url('cap-byline.php').'/cap-byline/close_circle.png"></div><div class="modal-window">';
-			$markup .= gravity_form(get_field('author_contact_form_id', 'options'), false, false, false, array('author_contact_to' => ''.$person_email.''), true, 25, false);
-			gravity_form_enqueue_scripts(get_field('author_contact_form_id', 'options'), true);
+			$markup .= gravity_form( get_field('author_contact_form_id', 'options'), false, false, false, array('author_contact_email' => ''.$person->term_id.''), true, 25, false );
+			gravity_form_enqueue_scripts( get_field('author_contact_form_id', 'options'), true );
 			$markup .= '</div></div></div>';
 			$markup .= '
 			<style>
@@ -666,17 +666,20 @@ if ( ! function_exists( 'cap_person_bio' ) ) {
 	}
 }
 
-function cap_person_route_notification($notification, $form , $entry) {
-    global $post;
-	if ($form["id"] == get_field('author_contact_form_id', 'options') ) {
-		$email_to = $entry[4];
+function cap_byline_contact_form_email($entry, $form) {
+	if ( $form["id"] == get_field('author_contact_form_id', 'options') ) {
+		$email_to = get_field( 'person_email', 'person_'.$entry[4] );
+		$email_from_first = $entry['1.3'];
+		$email_from_last = $entry['1.6'];
+		$email_from = $entry[2];
+		$email_message = $entry[3];
 		if ( !empty($email_to) ){
-			$notification['to'] = "".$email_to."";
+			$headers = 'From: '.$email_from_first.' '.$email_from_last.' <'.$email_from.'>' . "\r\n";
+			wp_mail( $email_to, 'You have a new message from '.$email_from_first.' '.$email_from_last.'', $email_message, $headers );
 		}
 	}
-    return $notification ;
 }
-add_filter( 'gform_notification', 'cap_person_route_notification', 10, 3 );
+add_action( "gform_after_submission", "cap_byline_contact_form_email", 10, 2 );
 
 function cap_rss_other_author($name){
     global $post;
