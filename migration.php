@@ -213,10 +213,10 @@ function c3_cap_byline_migrate() {
 
 	// Setup a query to get posts of type bio
 	$args = array(
-		'post_type' => array('bio'),
+		'post_type'      => array( 'bio' ),
 		'posts_per_page' => 1000,
-		'fields' => 'ids',
-		'cache_results' => false
+		'fields'         => 'ids',
+		'cache_results'  => false
 	);
 	$the_query = new WP_Query( $args );
 
@@ -228,47 +228,38 @@ function c3_cap_byline_migrate() {
 			$the_query->the_post();
 
 			// get the email address and twitter handle
-			$email_address = get_post_meta( get_the_ID(), '_bio_email', true);
-			$twitter_handle = get_post_meta( get_the_id(), '_bio_twitter', true);
-
-			$bios = array(
-				'bio_id' => get_the_ID(),
-				'email_address' => $email_address,
-				'twitter_handle' => $twitter_handle,
-				'persons' => array(),
-			);
+			$email_address  = get_post_meta( get_the_ID(), '_bio_email', true );
+			$twitter_handle = get_post_meta( get_the_id(), '_bio_twitter', true );
 
 			$persons = get_the_terms( get_the_ID(), 'person' );
 
 			// We don't want to throw errors if there are any posts with no data.
-			if (!empty($persons)) {
-				foreach ($persons as $person ) {
-					if (!empty($email_address)) {
-						update_field('field_539f06f598929', $email_address);
-					}
-					if (!empty($twitter_handle)) {
-						update_field('field_539efea738186', $twitter_handle);
-					}
-
-					$bios['persons'][] = $person->term_id;
+			if ( ! empty( $persons ) ) {
+				$person = array_shift( $persons );
+				if ( ! empty( $email_address ) ) {
+					update_field( 'field_539f06f598929', $email_address, $person );
 				}
-				print_r($bios);
-				echo '<strong>'.get_the_id().'</strong>';
-				echo '<br>'.get_the_title().'  -- Ran '. $i . '<br><br>';
+				if ( ! empty( $twitter_handle ) ) {
+					update_field( 'field_539efea738186', $twitter_handle, $person );
+				}
+
+				echo '<strong>' . get_the_id() . '</strong>';
+				echo '<br>' . get_the_title() . '  -- Ran ' . $i . '<br><br>';
 			} else {
-				echo '<span style="color:red">'.get_the_title().' Had No Persons -- Ran' . $i . '</span><br><br>';
+				echo '<span style="color:red">' . get_the_title() . ' Had No Persons -- Ran' . $i . '</span><br><br>';
 				$missed_bios[] = get_the_ID();
 			}
-			$i++;
+			$i ++;
 		}
 	}
 	// Restore original post data to start through the loop again.
 	wp_reset_postdata();
 
-	echo "missed bios " + print_r($missed_bios, true);
+	print_r($missed_bios);
 
 	die();
 }
-add_action('wp_ajax_c3_cap_byline_migrate', 'c3_cap_byline_migrate');
-add_action('wp_ajax_nopriv_c3_cap_byline_migrate', 'c3_cap_byline_migrate');
+
+add_action( 'wp_ajax_c3_cap_byline_migrate', 'c3_cap_byline_migrate' );
+add_action( 'wp_ajax_nopriv_c3_cap_byline_migrate', 'c3_cap_byline_migrate' );
 // To run hit - http://domain.com/wp-admin/admin-ajax.php?action=c3_cap_byline_migrate
