@@ -485,10 +485,16 @@ function get_cap_byline($type, $post_id) {
 		$time_format = 'F j, Y';
 	}
 	// Here we check to make sure the post's post time is not the same as the posts updated time within the hour. We also check to make sure that the meta key that manually disables this function isn't true.
-	if ( get_the_modified_time('jnyH') != get_the_time('jnyH') && false == get_post_meta( $post_id, 'cap_disable_updated_time', true ) && false == get_field( 'global_disable_update_time', 'options' ) ) {
+	//took out true == get_post_meta(....) just to the right of && since the function returns 1 or 0 hence true or false by it self. No need comparing it with 'true'
+	// took out the right extream code since we have the show/not show rule for the post update time has now changed. Just simply checking the status of the checkbox can
+	//determine if we are supposed to show the post updated time or not.
+	if ( get_the_modified_time('jnyH') != get_the_time('jnyH') && /*true ==*/ get_post_meta( $post_id, 'cap_enable_updated_time', true ) /*&& false == get_field( 'global_disable_update_time', 'options' )*/ ) {//took
 		$time_string = '<time class="published" datetime="%1$s">%2$s</time>';
+		// This string should be able to be set based on the posts preference. i.e, Based on the option setting the editor set at the back end.
+		// Build this string iff the checkbox is checked from the backend.
 		$time_string .= '&nbsp;<time class="updated" datetime="%3$s">Updated: %4$s</time>';
 	} else {
+		//Did not append the time class="updated"....etc since there is no need to show the updated timestamp of the post
 		$time_string = '<time class="published" datetime="%1$s">%2$s</time>';
 	}
 
