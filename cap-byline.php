@@ -514,7 +514,11 @@ function get_cap_byline($type, $post_id) {
 			$markup .= apply_filters('cap_full_byline_persons', $content, $post_id);
 		} else {
 			$markup .= '<span class="byline"> by ';
-			$markup .= get_cap_authors($post_id, null, null, null);
+			if ('nolinks' == $type) {
+				$markup .= get_cap_authors($post_id, true, null, null);
+			} else {
+				$markup .= get_cap_authors($post_id, null, null, null);
+			}
 			$markup .= '</span>';
 		}
 
