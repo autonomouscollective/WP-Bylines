@@ -547,14 +547,17 @@ function cap_byline($type) {
 }
 
 if ( ! function_exists( 'cap_person_bio' ) ) {
-	function cap_person_bio($style) {
+	function cap_person_bio($style, $person = null) {
 		/**
 		 * Note from Seth:
 		 * I'm not happy with the css trickery and markup I've produced here. Eventually cleanup. This
 		 * was a quick and dirty implentation that would work across sites.
 		 */
-		global $wp_query;
-    	$person = $wp_query->get_queried_object();
+		if ( empty( $person ) ) {
+			global $wp_query;
+			$person = $wp_query->get_queried_object();
+		}
+
 		$person_photo = get_field( 'person_photo', 'person_'.$person->term_id );
 		// This field is only being used by ThinkProgress post ACF migration.
 		// The field itself is registered only in the TP theme in fields.php
@@ -572,6 +575,7 @@ if ( ! function_exists( 'cap_person_bio' ) ) {
 		if ( 'full' == $style ) {
 			$markup .= '<div class="person-title"><h1>'.$person->name.'<br><small>'.$person_title.'</small></h1></div>';
 		}
+
 		// begin the actual bio area
 		$markup .= '<div class="person-bio">';
 		if (!empty($person_photo)) {
