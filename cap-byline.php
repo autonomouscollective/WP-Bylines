@@ -174,6 +174,15 @@ if( function_exists("register_field_group") ) {
 				'library' => 'all',
 			),
 			array (
+				'key' => 'field_55197b1a6eeb8',
+				'label' => 'Hi-res Bio Pic',
+				'name' => 'person_photo_hi_res',
+				'type' => 'image',
+				'save_format' => 'id',
+				'preview_size' => 'thumbnail',
+				'library' => 'all',
+			),
+			array (
 				'key' => 'field_539f068a98928',
 				'label' => 'Title',
 				'name' => 'person_title',
@@ -559,6 +568,7 @@ if ( ! function_exists( 'cap_person_bio' ) ) {
 		}
 
 		$person_photo = get_field( 'person_photo', 'person_'.$person->term_id );
+		$person_photo_hi_res = get_field( 'person_photo_hi_res', 'person_'.$person->term_id );
 		// This field is only being used by ThinkProgress post ACF migration.
 		// The field itself is registered only in the TP theme in fields.php
 		$person_photo_legacy = get_field( 'person_photo_legacy', 'person_'.$person->term_id );
@@ -568,6 +578,7 @@ if ( ! function_exists( 'cap_person_bio' ) ) {
 
 		if (!empty($person_photo)) {
 			$person_photo_output = wp_get_attachment_image( $person_photo, 'medium' );
+			$person_photo_hi_res_output = wp_get_attachment_image_src( $person_photo_hi_res, 'full');
 		}
 
 		$markup = '<div class="person '.$style.'">';
@@ -579,7 +590,14 @@ if ( ! function_exists( 'cap_person_bio' ) ) {
 		// begin the actual bio area
 		$markup .= '<div class="person-bio">';
 		if (!empty($person_photo)) {
-			$markup .= '<div class="bio-pic">'.wp_get_attachment_image( $person_photo, 'medium' ).'</div>';
+			$markup .= '<div class="bio-pic">'.$person_photo_output;
+
+			// optional hi res photo
+			if (!empty($person_photo_hi_res_output)) {
+				$markup .= '<div class="bio-pic-hi-res"><a href="'.$person_photo_hi_res_output[0].'">Download hi-res</a></div>';
+			}
+
+			$markup .= '</div>';
 		} elseif (!empty($person_photo_legacy)) {
 			$markup .= '<div class="bio-pic"><img src="'.$person_photo_legacy.'"></div>';
 		}
