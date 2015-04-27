@@ -263,3 +263,38 @@ function c3_cap_byline_migrate() {
 add_action( 'wp_ajax_c3_cap_byline_migrate', 'c3_cap_byline_migrate' );
 add_action( 'wp_ajax_nopriv_c3_cap_byline_migrate', 'c3_cap_byline_migrate' );
 // To run hit - http://domain.com/wp-admin/admin-ajax.php?action=c3_cap_byline_migrate
+
+function gp_cap_byline_migrate() {
+
+    // Setup a query to get posts of type bio
+    $args = array(
+        'post_type'      => array( 'bio' ),
+        'posts_per_page' => 1000,
+        'cache_results'  => false
+    );
+    $the_query = new WP_Query( $args );
+
+    // Loop through this query, set person_is_linked to true for the person
+    // corresponding to each bio
+    if ( $the_query->have_posts() ) {
+        $posts = $the_query->get_posts();
+        foreach ($posts as $post) {
+            echo "for Bio post_id: $post->ID<br/>\n";
+
+            // get person
+            $person = get_term_by('slug', $post->post_name, 'person');
+            if ($person) {
+                // update person_is_linked
+                update_field('field_53a2ff7d56f11', true, $person->term_id);
+                echo "update person (term_id, name): ($person->term_id, $person->name)";
+            }
+            echo "<br/><br/>\n";
+        }
+    }
+
+    die();
+}
+
+add_action( 'wp_ajax_gp_cap_byline_migrate', 'gp_cap_byline_migrate' );
+add_action( 'wp_ajax_nopriv_gp_cap_byline_migrate', 'gp_cap_byline_migrate' );
+// To run hit - http://domain.com/wp-admin/admin-ajax.php?action=gp_cap_byline_migrate
