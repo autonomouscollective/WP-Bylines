@@ -464,7 +464,11 @@ function get_cap_authors($post_id, $disable_link=false, $as_array=false, $return
 
 				if ( $total_num_people > 1 && $total_num_people <= 2 ) {
 					if ( $i != $total_num_people ) {
-						$output .= ' & ';
+						if (has_filter('cap_byline_and')) {
+							$output .= apply_filters('cap_byline_and', $content);
+						} else {
+							$output .= ' & ';
+						}
 					}
 				} elseif ( $total_num_people > 2 ) {
 					if ( $i != $total_num_people ) {
