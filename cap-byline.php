@@ -1,10 +1,11 @@
 <?php
 /**
- * Plugin Name: CAP Bylines
+ * Plugin Name: CAP Byline
+ * Plugin URI: https://github.com/amprog/cap-byline
  * Description: Provides a CAP standardized method for choosing authors for posts
  * Version: 1.2
  * Author: Seth Rubenstein for Center for American Progress
- * Author URI: http://sethrubenstein.info
+ * Author URI: https://github.com/amprog
  * License: GPL2
  */
 $plugin_dir = plugin_dir_path( __FILE__ );
