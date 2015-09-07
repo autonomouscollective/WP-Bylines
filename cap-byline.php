@@ -337,6 +337,11 @@ if( function_exists("register_field_group") ) {
 					'operator' => '!=',
 					'value' => 'cd-report',
 				),
+				array (
+					'param' => 'post_type',
+					'operator' => '!=',
+					'value' => 'page',
+				),
 			),
 
 		),
