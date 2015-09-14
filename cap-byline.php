@@ -281,6 +281,15 @@ if( function_exists("register_field_group") ) {
 				'message' => '',
 				'default_value' => 0,
 			),
+                        array (
+                                'key' => 'field_53a2fe7d51239',
+                                'label' => 'Display Post Time',
+                                'name' => 'global_display_post_time',
+                                'type' => 'true_false',
+                                'instructions' => 'Checking this field will display the time a post is published globally.',
+                                'message' => '',
+                                'default_value' => 1,
+                        ),
 		),
 		'location' => array (
 			array (
@@ -505,10 +514,14 @@ function get_cap_byline($type, $post_id) {
 	}
 	// Here we check to make sure the post's post time is not the same as the posts updated time within the hour. We also check to make sure that the meta key that manually disables this function isn't true.
 	if ( get_the_modified_time('jnyH') != get_the_time('jnyH') && true == get_post_meta( $post_id, 'cap_enable_updated_time', true ) && false == get_field( 'global_disable_update_time', 'options' ) ) {
-		$time_string = '<time class="published" datetime="%1$s">%2$s</time>';
+	        if ( true===get_field( 'global_display_post_time') ) {
+   	            $time_string = '<time class="published" datetime="%1$s">%2$s</time>';
+                }
 		$time_string .= '&nbsp;<time class="updated" datetime="%3$s">Updated: %4$s</time>';
 	} else {
-		$time_string = '<time class="published" datetime="%1$s">%2$s</time>';
+	        if ( true===get_field( 'global_display_post_time') ) {
+		    $time_string = '<time class="published" datetime="%1$s">%2$s</time>';
+                }
 	}
 
 	$time_string = sprintf( $time_string,
