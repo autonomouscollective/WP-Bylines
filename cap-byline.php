@@ -508,19 +508,17 @@ function get_cap_authors($post_id, $disable_link=false, $as_array=false, $return
  */
 function get_cap_byline($type, $post_id) {
     // If is a single post page display the time, otherwise just display only the date.
-    if (is_singular()) {
+    if (is_singular() && true===get_field( 'global_display_post_time', 'options')) {
         $time_format = 'F j, Y \a\t g:i a';
     } else {
         $time_format = 'F j, Y';
     }
 
-    if ( true===get_field( 'global_display_post_time', 'options') ) {
-        $time_string = '<time class="published" datetime="%1$s">%2$s</time>';
+    $time_string = '<time class="published" datetime="%1$s">%2$s</time>';
 
-        // if display update time is not disabled and if the post time is not within one hour of the updated time...
-        if ( get_the_modified_time('jnyH') != get_the_time('jnyH') && true == get_post_meta( $post_id, 'cap_enable_updated_time', true ) && false == get_field( 'global_disable_update_time', 'options' ) ) {
-            $time_string .= '&nbsp;<time class="updated" datetime="%3$s">Updated: %4$s</time>';
-        }
+    // if the post time is not within one hour of the updated time...
+    if ( get_the_modified_time('jnyH') != get_the_time('jnyH') && true == get_post_meta( $post_id, 'cap_enable_updated_time', true ) && false == get_field( 'global_disable_update_time', 'options' ) ) {
+        $time_string .= '&nbsp;<time class="updated" datetime="%3$s">Updated: %4$s</time>';
     }
 
     $time_string = sprintf( $time_string,
