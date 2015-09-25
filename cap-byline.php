@@ -217,6 +217,18 @@ if( function_exists("register_field_group") ) {
                 'formatting' => 'none',
                 'maxlength' => '',
             ),
+            array(
+                'key'           => 'field_560434a4d45fe',
+                'label'         => 'Facebook ID',
+                'name'          => 'person_facebook_id',
+                'type'          => 'text',
+                'default_value' => '',
+                'placeholder'   => '',
+                'prepend'       => '',
+                'append'        => '',
+                'formatting'    => 'none',
+                'maxlength'     => '',
+            ),
             array (
                 'key' => 'field_53a2ff7d56f11',
                 'label' => 'Person Is Linked?',
@@ -745,5 +757,28 @@ function cap_rss_other_author($name){
 }
 add_filter( 'the_author', 'cap_rss_other_author' );
 add_filter ( 'get_the_author_display_name', 'cap_rss_other_author' ) ;
+
+/**
+ * Returns the list of facebook ids for the authors (person terms) of the current post
+ * @return array
+ */
+function get_the_cap_author_facebook_ids() {
+    global $post;
+    $facebook_ids = array();
+
+    $authors = get_cap_authors( $post->ID, true, true, true );
+    if ( ! empty( $authors ) && is_array( $authors ) ) {
+        foreach ( $authors as $author ) {
+            $data        = get_term_by( 'slug', $author, 'person', 'ARRAY_A' );
+            $id          = $data['term_id'];
+            $facebook_id = get_field( 'person_facebook_id', 'person_' . $id );
+            if ( ! empty( $facebook_id ) ) {
+                $facebook_ids[] = esc_attr( $facebook_id );
+            }
+        }
+    }
+
+    return $facebook_ids;
+}
 
 include $plugin_dir.'/migration.php';
