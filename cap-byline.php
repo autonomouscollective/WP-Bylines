@@ -446,7 +446,7 @@ function get_cap_authors($post_id, $disable_link=false, $as_array=false, $return
             $byline_array[] = $get_byline->slug;
         }
     } else {
-        $byline_array = '';
+        $byline_array = array();
     }
 
     // Check for the display function, if as_array is set to true then just return the array...
