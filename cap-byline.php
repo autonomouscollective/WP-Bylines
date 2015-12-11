@@ -437,16 +437,14 @@ add_action('acf/save_post', 'cap_byline_array_set_terms', 20);
  */
 function get_cap_authors($post_id, $disable_link=false, $as_array=false, $return_slugs=true, $byline_field='byline_array') {
     $people = get_field($byline_field, $post_id);
-
+	$byline_array = array();
+	
     if ( !empty($people) ) {
         // let's setup an array to organize these people based on some conditions below
-        $byline_array = array();
         foreach ( $people as $person ) {
             $get_byline = get_term_by( 'id', $person, 'person' );
             $byline_array[] = $get_byline->slug;
         }
-    } else {
-        $byline_array = '';
     }
 
     // Check for the display function, if as_array is set to true then just return the array...
