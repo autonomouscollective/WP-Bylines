@@ -484,7 +484,7 @@ function get_cap_authors($post_id, $disable_link=false, $as_array=false, $return
                     $output .= '<a href="/?person='.$slug.'">'.$name.'</a>';
                     // Checks for single instance of any post type, not just Wordpress defaults
                     if ( !empty($person_twitter_handle) && is_singular( get_post_type() ) ) {
-                        $output .= "<a href=\"https://twitter.com/intent/user?screen_name=".$person_twitter_handle."\"><img src=\"" .content_url(). "/plugins/cap-byline/bird_blue_16.png\" class=\"twitter-bird\"></a>";
+                        $output .= "<a href=\"https://twitter.com/intent/user?screen_name=".$person_twitter_handle."\"><img src=\"" .content_url(). "/plugins/cap-byline/bird_blue_16.png\" class=\"twitter-bird\" /></a>";
                     }
                 }
 
